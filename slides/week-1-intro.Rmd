@@ -1,0 +1,236 @@
+---
+title: "Week One"
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(message = FALSE, fig.align = "center")
+library(dplyr)
+library(readr)
+library(ggplot2)
+library(knitr)
+```
+
+# Case Study: Sampling
+
+---
+# Case Study: Sampling
+
+We can estimate the mean $\mu$ of a population of size $N$ in two ways:
+
+--
+
+1. Take a simple random sample of size $n$ and calculate $\bar{x}$.
+
+--
+
+2. Take a stratified sample of $n_1$ from the first strata and $n_2$ from the 
+second strata, proportionally, then compute $\bar{x}$.
+
+--
+
+Which estimate (r.v.) will have "better" properties?
+
+---
+# Set up population
+
+```{r}
+set.seed(403)
+```
+
+--
+
+```{r}
+# generate population
+N_1 <- 20000
+N_2 <- 30000
+g1 <- rnorm(N_1, mean = 1, sd = 1)
+g2 <- rnorm(N_2, mean = 3, sd = 1)
+pop <- c(g1, g2)
+```
+
+--
+
+```{r}
+# lay out parameters
+N <- N_1 + N_2
+l_1 <- N_1/N
+l_2 <- N_2/N
+mu_1 <- mean(g1)
+sigsq_1 <- var(g1) * (N_1 - 1) / N_1
+mu_2 <- mean(g2)
+sigsq_2 <- var(g2) * (N_2 - 1) / N_2
+```
+
+
+---
+# 1. One simple random sample 
+
+--
+
+```{r fig.height=3, fig.align="center"}
+n <- 100
+samp <- sample(pop, size = n)
+df <- data.frame(x = samp)
+library(tidyverse)
+ggplot(df, aes(x = x)) +
+  geom_dotplot(alpha = .5) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# 1. One simple random sample, cont 
+
+```{r fig.height = 3}
+# Density plot
+ggplot(df, aes(x = x)) +
+  geom_density(fill = "steelblue", alpha = .5) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# 1. Simulation: SRS
+
+--
+
+```{r}
+it <- 5000
+xbar_srs <- rep(NA, it)
+for (i in 1:it) {
+  samp <- sample(pop, size = n)
+  xbar_srs[i] <- mean(samp)
+}
+```
+
+--
+
+```{r}
+head(xbar_srs)
+```
+
+
+---
+# 2. One stratified sample 
+
+--
+
+```{r}
+n_1 <- n * l_1
+n_2 <- n * l_2
+samp_1 <- sample(g1, size = n_1)
+samp_2 <- sample(g2, size = n_2)
+df <- data.frame(x = c(samp_1, samp_2),
+                 stratum = rep(c("1", "2"), 
+                               times = c(n_1, n_2)))
+```
+
+--
+
+```{r, fig.height=3, echo = FALSE}
+ggplot(df, aes(x = x, fill = stratum)) +
+  geom_dotplot(alpha = .5) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# 2. Simulation: Stratified sampling
+
+--
+
+```{r}
+xbar_strat <- rep(NA, it)
+for (i in 1:it) {
+  samp_1 <- sample(g1, size = n_1)
+  samp_2 <- sample(g2, size = n_2)
+  xbar_strat[i] <- mean(c(samp_1, samp_2))
+}
+```
+
+```{r}
+head(xbar_strat)
+```
+
+
+---
+# Simulations compared 
+
+```{r, fig.height=3}
+df <- data.frame(xbar = c(xbar_srs, xbar_strat),
+                 method = rep(c("srs", "strat"), times = c(it, it)))
+ggplot(df, aes(x = xbar, fill = method)) +
+  geom_density(alpha = .5) +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# Simulation vs Analytical
+
+--
+
+Through simulation, we have an empirical approximation to the variances of each estimate that we can compare to our analytical estimates.
+
+--
+
+```{r}
+#SRS
+var(xbar_srs)
+(1/n) * (var(pop) * (N-1)/N)
+# stratified
+var(xbar_strat)
+(1/n) * (l_1 * sigsq_1 + l_2 * sigsq_2)
+```
+
+
+---
+# Simulation vs Analytical, cont.
+
+--
+
+We can more directly compare the analytical variances by writing the SRS estimate in terms of the strata variances and finding the difference in the variances of the two estimates.
+
+$$
+\textrm{difference:} \quad \frac{1}{n} \sum_{j = 1}^J \lambda_j \left( \mu_j - \mu \right)^2
+$$
+
+---
+# Simulation-Empirical-Computational Approach
+
+--
+
+- Helps build intuition
+- Checks analytical result
+- Widely applicable
+
+--
+
+# Analytical Approach
+
+--
+
+- When it is exists, it is:
+    + more general
+    + often yields insight
