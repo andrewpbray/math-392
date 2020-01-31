@@ -6,6 +6,13 @@ Math 392 | Reed College | Spring 2020
 ### Schedule
 
 
+#### Week 2: 
+
+**Monday**
+- Reading: p. 394 - 405
+
+* * *
+
 #### Week 1: Intro
 
 **Monday**
