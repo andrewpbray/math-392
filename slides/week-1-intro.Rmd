@@ -234,3 +234,110 @@ $$
 - When it is exists, it is:
     + more general
     + often yields insight
+    
+
+
+
+---
+# Priors and Posteriors
+
+---
+# Warm-up
+
+## Marginal distribution of X
+
+$$
+f_X(x) = e^{-x} \quad \quad0 < x < \infty
+$$
+
+--
+
+```{r fig.height = 5, echo= FALSE}
+fx <- function(x) {ifelse(0 < x, exp(-x), 0)}
+
+ggplot(data.frame(x = 0, y = 0)) +
+  stat_function(fun = fx, n = 300) +
+  xlim(0, 5) +
+  labs(x = "x") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# Warm-up
+
+## Conditional distribution of Y|X = x
+
+$$
+f_{Y|X = x}(y|X = x) = e^{-(y - x)} \quad \quad0 < x < y <  \infty
+$$
+
+--
+
+```{r fig.height = 5, echo= FALSE}
+fyg1 <- function(x, c) {ifelse(c < x, exp(-(x - c)), 0)}
+
+p1 <- ggplot(data.frame(x = 0, y = 0)) +
+  stat_function(fun = fyg1, args = list(c = 1), n = 300) +
+  xlim(0, 5) +
+  labs(x = "y") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  ggtitle("f(y | X = 1)")
+
+p2 <- ggplot(data.frame(x = 0, y = 0)) +
+  stat_function(fun = fyg1, args = list(c = 2), n = 300) +
+  xlim(0, 5) +
+  labs(x = "y") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())+
+  ggtitle("f(y | X = 2)")
+
+library(patchwork)
+p1 / p2
+```
+
+
+---
+# Warm-up
+
+## Joint distribution of X, Y
+
+$$
+f_{X, Y}(X, Y) = e^{-y} \quad \quad0 < x < y <  \infty
+$$
+
+--
+
+```{r echo = FALSE, cache = TRUE, eval = TRUE}
+library(rayshader)
+library(magick)
+
+fxy <- function(x, y) {
+  ifelse(0 < x & x < y, exp(-y), 0)
+}
+
+xx <- runif(1e6, .05, 3)
+yy <- runif(1e6, .05, 3)
+k <- runif(1e6)
+inds <- which(k < (fxy(xx, yy)/fxy(.05, .0500001)))
+x <- xx[inds]
+y <- yy[inds]
+
+df2 <- data.frame(x, y)
+
+p1 <- ggplot(df2) +
+  stat_density_2d(aes(x = x, y = y, fill = stat(nlevel)), 
+                  geom = "polygon", n = 100, bins = 20, contour = TRUE)
+
+plot_gg(p1)
+render_snapshot(clear = TRUE)
+```
+

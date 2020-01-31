@@ -1,0 +1,14 @@
+base
+dplyr
+readr
+ggplot2
+knitr
+tidyverse
+tibble
+tidyr
+purrr
+stringr
+forcats
+patchwork
+rayshader
+magick

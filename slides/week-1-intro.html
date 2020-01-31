@@ -271,13 +271,60 @@ $$
 
 --
 
-## Analytical Approach
+# Analytical Approach
 
 --
 
 - When it is exists, it is:
     + more general
     + often yields insight
+    
+
+
+
+---
+# Priors and Posteriors
+
+---
+# Warm-up
+
+## Marginal distribution of X
+
+$$
+f_X(x) = e^{-x} \quad \quad0 &lt; x &lt; \infty
+$$
+
+--
+
+&lt;img src="week-1-intro_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Warm-up
+
+## Conditional distribution of Y|X = x
+
+$$
+f_{Y|X = x}(y|X = x) = e^{-(y - x)} \quad \quad0 &lt; x &lt; y &lt;  \infty
+$$
+
+--
+
+&lt;img src="week-1-intro_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Warm-up
+
+## Joint distribution of X, Y
+
+$$
+f_{X, Y}(X, Y) = e^{-y} \quad \quad0 &lt; x &lt; y &lt;  \infty
+$$
+
+--
+
+&lt;img src="week-1-intro_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;" /&gt;
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
