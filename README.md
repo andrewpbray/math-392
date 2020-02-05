@@ -13,6 +13,37 @@ Math 392 | Reed College | Spring 2020
 
 * * *
 
+#### Week 2: The Mechanics of Bayesian Inference
+
+**Monday**
+- Conjugate Priors
+- Reading: p. 394 - 405
+- Please finish Normal-Normal example before next class
+
+**Wednesday**
+- Bayes Estimators
+- Reading: p. 408 - 416
+
+**Friday**
+- Evaluating Bayes estimators
+- Problem Set 2 due at 10 pm in the box outside my door
+
+#### Week 3: Alternative Frameworks: Likelihood and Method of Moments
+
+#### Week 4: Sampling Distributions of Estimators
+
+#### Week 5: Bootstrap Sampling Distributions
+
+#### Week 6: Frequentist, Bayesian, and Bootstrap CI
+
+[Exam 1]
+
+#### Week 7: Fisher Information, Efficiency, and UMVUE
+
+
+
+* * *
+
 #### Week 1: Intro
 
 **Monday**
