@@ -1,0 +1,78 @@
+---
+title: "MATH 392 Problem Set 3"
+output: pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, fig.align = "center", 
+                      message = FALSE, warning = FALSE)
+```
+
+
+### Exercises from the book
+
+**7.5**: 5, 8, 11, 12
+
+**7.6**: 3, 12, 14, 23
+
+### Case Study: Bayes vs. Frequentist Estimators
+
+This problem is a work in progress. It will be posted by midday Tuesday.
+
+```{r clean-data, echo = FALSE}
+library(tidyverse)
+library(here)
+# Downloaded from https://www.statecancerprofiles.cancer.gov/ on 2/8/20
+incd <- read_csv(here("data", "incd.csv"), 
+                 col_names = FALSE, 
+                 skip = 9, 
+                 na = c("", "NA", "*")) %>%
+  select(1, 2, 4) %>%
+  slice(2:3142)
+names(incd) <- c("county", "fips", "cancer_rate")
+incd <- incd %>%
+  mutate(county = tolower(county) %>%
+           str_replace(pattern = "\\(.*\\)",
+                       replacement = "")) %>%
+  separate(county, into = c("county", "state"), sep = ", ") %>%
+  mutate(county = str_replace(county,
+                              pattern = " county",
+                              replacement = ""))
+  
+library(maps)
+county_shapes <- map_data("county")
+df <- county_shapes %>%
+  left_join(incd, by = c("region" = "state", "subregion" = "county")) 
+df <- df %>%
+  mutate(highest_rate = cancer_rate > quantile(cancer_rate, .95, na.rm = TRUE),
+         lowest_rate = cancer_rate < quantile(cancer_rate, .05, na.rm = TRUE))
+```
+
+```{r maps, fig.align="center", fig.width = 8, fig.height = 5, echo = FALSE}
+ggplot() +
+  geom_polygon(data = df, 
+               aes(x = long,
+                   y = lat, 
+                   group = group,
+                   fill = highest_rate)) +
+  scale_fill_manual(values = c("gray", "tomato"), 
+                    na.value = "lightgray") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "", y = "", title = "US Counties with Highest Cancer Rate")
+  
+ggplot() +
+  geom_polygon(data = df, 
+               aes(x = long,
+                   y = lat, 
+                   group = group,
+                   fill = lowest_rate)) +
+  scale_fill_manual(values = c("gray", "tomato"), 
+                    na.value = "lightgray") +
+  theme_minimal() +
+  theme(legend.position = "none") +
+  labs(x = "", y = "", title = "US Counties with Lowest Cancer Rate")
+```
+
+
+
