@@ -255,3 +255,21 @@ prop_model(data, prior_prop = c(1, 5))
 data <- c(FALSE, TRUE, FALSE)
 prop_model(data, prior_prop = c(1, 5))
 ```
+
+---
+# What is the explanation for this pattern?
+--
+
+```{r echo = FALSE}
+include_graphics("figs/kidney-high.png")
+```
+
+
+---
+# What is the explanation for this pattern?
+--
+
+```{r echo = FALSE}
+include_graphics("figs/kidney-low.png")
+```
+
