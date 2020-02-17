@@ -1,0 +1,45 @@
+---
+title: "MATH 392 Problem Set 4"
+output: 
+  pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.align = "center", 
+                      message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(here)
+```
+
+
+## Exercises from the book
+
+**8.1**: 1, 3
+
+**8.2**: 2, 3 (use R), 4 (can use a cdf for the probability calculation), 13
+
+**8.4**: 3
+
+For 8.2.3, some useful functions include: `stat_function()`, `dchisq()`, `geom_hline()`, and `qchisq()` (to find the medians).
+
+<!-- \newpage -->
+
+<!-- ## Case Study: German Tank Problem -->
+
+<!-- Let's pick up the example that we began in class but make the simplifying assumption that we're studying a process where our sample is drawn from the continuous distribution, $X_1, X_2, \ldots, X_n \sim \textrm{Unif}(0, \theta)$, but we're still interested in estimating $\theta$. The MLE and Method of Moments estimators are the same: -->
+
+<!-- $$\begin{aligned} -->
+<!-- \hat{\theta}_{MLE} &= \textrm{max}(X_1, X_2, \ldots, X_n) = X_{max} \\ -->
+<!-- \hat{\theta}_{MOM} &= 2 \bar{X} \\ -->
+<!-- \end{aligned}$$ -->
+
+<!-- 1. Calculate the Bias What happens in the asymptote? -->
+
+<!-- The pdf of $X_{max}$ is $nF^{n - 1}(x)f(x). -->
+
+<!-- 2. Calculate the Variance What happens in the asymptote? -->
+
+<!-- 3. Simulate and do ggridges plot to show convergence/consistency -->
+
+
