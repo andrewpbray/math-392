@@ -93,8 +93,6 @@ acs %>%
   theme(panel.border = element_blank())
 ```
 
-*There is no relationship between the true rate and the population. This was by design: each rate was drawn i.i.d. from the same gamma distribution.*
-
 
 ### A model for the data
 
