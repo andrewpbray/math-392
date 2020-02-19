@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Week Four</title>
+    <meta charset="utf-8" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Week Four
+
+---
+
+
+
+
+# Estimation Theories Compared
+
+---
+# Bayesian Estimation
+--
+
+## Benefits
+
+- Can incorporate other information
+- Intuitive interpretation
+- Clearly articulated loss function
+
+--
+
+## Limitations
+
+- Requires specification of prior (should check sensitivity)
+- High dimensional priors are hard to think about
+- Some posteriors don't have closed-forms (no prob!)
+
+
+---
+# Likelihood-based Estimation
+--
+
+## Benefits
+
+- Intuitive interpretation (in a limited sense)
+- Under certain circumstances, MLEs are asymptotically Normal
+- Easy to find (derivatives or numerical optimization)
+
+--
+
+## Limitations
+
+- MLEs don't always exist
+- MLE not always unique
+- Doesn't tell us anything about `\(P(\theta | x)\)`
+
+---
+# Method of Moments
+--
+
+## Benefits
+
+- Often very easy to computer
+- Can be used as a first guess for other methods
+- High dim `\(\theta\)`? No prob!
+
+--
+
+## Limitations
+
+- Doesn't work if the moments don't exist
+- Often have higher MSE
+- Can produce estimates outside parameter space
+
+---
+# Sampling from the Normal
+--
+
+
+```r
+set.seed(49)
+mu &lt;- 4
+sigma &lt;- 1.5
+n &lt;- 5
+x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+```
+
+--
+
+
+```r
+x
+```
+
+```
+## [1] 3.485101 3.079918 1.469616 3.080822 4.114537
+```
+
+--
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-4-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Sampling Distribution of `\(\bar{X}\)`
+--
+
+
+```r
+xbars &lt;- rep(NA, 500)
+for (i in 1:500) {
+  x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+  xbars[i] &lt;- mean(x)
+}
+```
+
+--
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Sampling Distribution of `\(\bar{X}\)`
+
+
+```r
+xbars &lt;- rep(NA, 500)
+for (i in 1:500) {
+  x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+  xbars[i] &lt;- mean(x)
+}
+```
+
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+
+
+```r
+p1 + stat_function(fun = dnorm, 
+                   args = list(mean = mu, 
+                               sd = sigma/sqrt(n)))
+```
+
+---
+# Sampling Distribution of `\(\bar{X}\)`
+
+
+```r
+*xbars &lt;- rep(NA, 50000)
+for (i in 1:50000) {
+  x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+  xbars[i] &lt;- mean(x)
+}
+```
+
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+
+
+```r
+p1 + stat_function(fun = dnorm, 
+                   args = list(mean = mu, 
+                               sd = sigma/sqrt(n)))
+```
+
+---
+# Sampling Distribution of `\(\hat{\sigma}^2\)`
+--
+
+
+```r
+chis &lt;- rep(NA, 500)
+for (i in 1:500) {
+  x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+  chis[i] &lt;- sum((x - mean(x))^2) / (sigma^2)
+}
+```
+
+--
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Sampling Distribution of `\(\hat{\sigma}^2\)`
+
+
+```r
+chis &lt;- rep(NA, 500)
+for (i in 1:500) {
+  x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+  chis[i] &lt;- sum((x - mean(x))^2) / (sigma^2)
+}
+```
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /&gt;
+
+
+```r
+p1 + stat_function(fun = dchisq, 
+                   args = list(df = n - 1),
+                   lwd = 1.5)
+```
+
+---
+# Recap of Important results
+--
+
+Let `\(X_1, X_2, \ldots, X_n \sim N(\mu, \sigma^2)\)`.
+
+--
+
+1. `\(\bar{X} \sim N(\mu, \sigma^2/n)\)`.
+
+--
+
+2. `\(\frac{\sum (X_i - \bar{X})^2}{\sigma^2} \sim \chi^2_{n-1}\)`.
+
+--
+
+3. `\(\bar{X}\)` and `\(\frac{1}{n}\sum (X_i - \bar{X})^2\)` are independent (only true for Normal R.VS.)
+
+
+---
+# Independence of `\(\bar{X}\)` and `\(\hat{\sigma}^2\)`
+--
+
+
+```r
+xbars &lt;- rep(NA, 500)
+chis &lt;- rep(NA, 500)
+for (i in 1:500) {
+  x &lt;- rnorm(n = n, mean = mu, sd = sigma)
+  xbars[i] &lt;- mean(x)
+  chis[i] &lt;- sum((x - mean(x))^2) / (sigma^2)
+}
+```
+
+--
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" /&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

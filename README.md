@@ -5,6 +5,29 @@ Math 392 | Reed College | Spring 2020
 
 ### Schedule
 
+#### Week 4: Sampling Distributions of Estimators
+
+**Monday**
+- Chi-squared Distribution
+- Reading: p. 464 - 472
+
+**Wednesday**
+- t Distribution
+- Reading: p. 480 - 484
+
+**Friday**
+- Problem Set 4 due at 10 pm in the box outside my door
+
+
+#### Week 5: Bootstrap Sampling Distributions
+
+#### Week 6: Frequentist, Bayesian, and Bootstrap CI
+
+[Exam 1]
+
+#### Week 7: Fisher Information, Efficiency, and UMVUE
+
+* * *
 
 #### Week 3: Alternative Frameworks: Likelihood and Method of Moments
 
@@ -20,16 +43,6 @@ Math 392 | Reed College | Spring 2020
 - Method of Moments
 - Reading: p. 430 - 434
 - Problem Set 3 due at 10 pm in the box outside my door
-
-#### Week 4: Sampling Distributions of Estimators
-
-#### Week 5: Bootstrap Sampling Distributions
-
-#### Week 6: Frequentist, Bayesian, and Bootstrap CI
-
-[Exam 1]
-
-#### Week 7: Fisher Information, Efficiency, and UMVUE
 
 * * *
 
