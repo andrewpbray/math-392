@@ -16,6 +16,8 @@ Math 392 | Reed College | Spring 2020
 - Reading: p. 480 - 484
 
 **Friday**
+- Confidence Intervals
+- Reading: p. 485 - 493
 - Problem Set 4 due at 10 pm in the box outside my door
 
 
