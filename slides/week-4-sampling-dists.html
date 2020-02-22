@@ -244,6 +244,120 @@ for (i in 1:500) {
 --
 
 &lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Confidence Intervals
+
+---
+# Point Estimate for `\(\sigma^2\)`
+--
+
+
+```r
+n &lt;- 10
+mu &lt;- 10
+sigmasq &lt;- 4
+x &lt;- rnorm(n = n, mean = mu, sd = sqrt(sigmasq))
+xbar &lt;- mean(x)
+sigsq_mle &lt;- (1 / n) * sum((x - xbar)^2)
+```
+
+--
+
+
+```r
+sigsq_mle
+```
+
+```
+## [1] 1.759888
+```
+
+---
+# Interval Estimate for `\(\sigma^2\)`
+--
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-22-1.png" style="display: block; margin: auto;" /&gt;
+
+--
+
+
+```r
+alpha &lt;- .05
+q1 &lt;- qchisq(alpha/2, df = n - 1)
+q2 &lt;- qchisq(1 - alpha/2, df = n - 1)
+```
+
+---
+# Interval Estimate for `\(\sigma^2\)`
+
+&lt;img src="week-4-sampling-dists_files/figure-html/unnamed-chunk-24-1.png" style="display: block; margin: auto;" /&gt;
+
+
+```r
+alpha &lt;- .05
+q1 &lt;- qchisq(alpha/2, df = n - 1)
+q2 &lt;- qchisq(1 - alpha/2, df = n - 1)
+```
+
+
+```
+## [1] 2.700389
+```
+
+```
+## [1] 19.02277
+```
+
+---
+# Interval Estimate for `\(\sigma^2\)`, cont.
+--
+
+
+```r
+lower &lt;- sum((x - xbar)^2)/q2
+upper &lt;- sum((x - xbar)^2)/q1
+```
+
+--
+
+
+```
+## [1] 0.9251482
+```
+
+```
+## [1] 6.517163
+```
+
+--
+
+
+```r
+(upper - lower) / 2
+```
+
+--
+
+
+```
+## [1] 2.796007
+```
+
+--
+
+
+```r
+sigsq_mle
+```
+
+--
+
+
+```
+## [1] 1.759888
+```
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>

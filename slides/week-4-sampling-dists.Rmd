@@ -288,3 +288,117 @@ ggplot(data.frame(x = xbars, y = chis),
   labs(x = "xbar", y = "chis")
 ```
 
+
+---
+# Confidence Intervals
+
+---
+# Point Estimate for $\sigma^2$
+--
+
+```{r}
+n <- 10
+mu <- 10
+sigmasq <- 4
+x <- rnorm(n = n, mean = mu, sd = sqrt(sigmasq))
+xbar <- mean(x)
+sigsq_mle <- (1 / n) * sum((x - xbar)^2)
+```
+
+--
+
+```{r}
+sigsq_mle
+```
+
+---
+# Interval Estimate for $\sigma^2$
+--
+
+```{r echo = FALSE, fig.height = 3.5}
+ggplot(data.frame(x = c(0, 30)), aes(x = x)) +
+  stat_function(fun = dchisq, args = list(df = n - 1)) +
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank()) +
+  ylab("") +
+  xlab("Chi-square, df = 9")
+```
+
+--
+
+```{r}
+alpha <- .05
+q1 <- qchisq(alpha/2, df = n - 1)
+q2 <- qchisq(1 - alpha/2, df = n - 1)
+```
+
+---
+# Interval Estimate for $\sigma^2$
+
+```{r echo = FALSE, fig.height = 3.5}
+ggplot(data.frame(x = c(0, 30)), aes(x = x)) +
+  stat_function(fun = dchisq, args = list(df = n - 1)) +
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        axis.line.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.text.y = element_blank()) +
+  ylab("") +
+  xlab("Chi-square, df = 9") +
+  geom_vline(xintercept = q1, lty = 2) +
+  geom_vline(xintercept = q2, lty = 2)
+```
+
+```{r}
+alpha <- .05
+q1 <- qchisq(alpha/2, df = n - 1)
+q2 <- qchisq(1 - alpha/2, df = n - 1)
+```
+
+```{r echo = FALSE}
+q1
+q2
+```
+
+---
+# Interval Estimate for $\sigma^2$, cont.
+--
+
+```{r}
+lower <- sum((x - xbar)^2)/q2
+upper <- sum((x - xbar)^2)/q1
+```
+
+--
+
+```{r echo = FALSE}
+lower
+upper
+```
+
+--
+
+```{r eval = FALSE}
+(upper - lower) / 2
+```
+
+--
+
+```{r echo = FALSE}
+(upper - lower) / 2
+```
+
+--
+
+```{r eval = FALSE}
+sigsq_mle
+```
+
+--
+
+```{r echo = FALSE}
+sigsq_mle
+```
