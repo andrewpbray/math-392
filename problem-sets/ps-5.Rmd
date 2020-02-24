@@ -1,0 +1,44 @@
+---
+title: "MATH 392 Problem Set 5"
+output: 
+  pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.align = "center", 
+                      message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(here)
+```
+
+
+## Exercise from the book
+
+**8.5**: 4
+
+\newpage
+
+## Case Study: German Tank Problem
+
+Let's pick up the example that we began in class but make the simplifying assumption that we're studying a process where our sample is drawn from the continuous distribution, $X_1, X_2, \ldots, X_n \sim \textrm{Unif}(0, \theta)$, but we're still interested in estimating $\theta$. The MLE and Method of Moments estimators are the same:
+
+$$\begin{aligned}
+\hat{\theta}_{MLE} &= \textrm{max}(X_1, X_2, \ldots, X_n) = X_{max} \\
+\hat{\theta}_{MOM} &= 2 \bar{X} \\
+\end{aligned}$$
+
+1. Calculate the bias of each estimator. If either one is biased, propose an additional estimator that corrects that bias (in the spirit of how $s^2$ is the bias-corrected version of $\hat{\sigma}^2$) . What happens to the bias of these estimators as sample size grows? Plot the relationship between sample size and bias for each estimator (two lines on one plot).
+
+2. Calculate the variance of each estimator (including any new bias-corrected ones). What happens as sample size grows? Create an analogous plot to the one above.
+
+3. Combine the notions of bias and variance into a third plot that shows how the Mean Squared Error changes as a function of sample size. Based on this plot, which estimator would you use and why?
+
+4. Using the method that we saw in class based on Markov's Inequality, assess whether each of these estimators is consistent.
+
+5. What is the sampling distribution of each statistic? For the MLE, consider both the Irwin-Hall distribution and a sensible approximation based on the Central Limit Theorem.
+
+6. Create a plot of the sampling distribution of each estimator using $n = 10$. Construct the empirical distribution via simulation and overlay the appropriate exact or approximate analytical form (each plot should be a curve overlayed on a histogram. See slides.)
+
+7. Form two different 95% confidence intervals for $\theta$ by using pivotal statistics inspired by each estimator.
+
