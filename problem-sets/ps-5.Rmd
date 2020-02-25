@@ -36,7 +36,7 @@ $$\begin{aligned}
 
 4. Using the method that we saw in class based on Markov's Inequality, assess whether each of these estimators is consistent.
 
-5. What is the sampling distribution of each statistic? For the MLE, consider both the Irwin-Hall distribution and a sensible approximation based on the Central Limit Theorem.
+5. What is the sampling distribution of each statistic? For the MOM, consider both the Irwin-Hall distribution and a sensible approximation based on the Central Limit Theorem.
 
 6. Create a plot of the sampling distribution of each estimator using $n = 10$. Construct the empirical distribution via simulation and overlay the appropriate exact or approximate analytical form (each plot should be a curve overlayed on a histogram. See slides.)
 
