@@ -217,7 +217,7 @@ data.frame(mles_boot) %>%
 --
 
 ```{r}
-mean(mles_boot) - theta
+mean(mles_boot) - max(x)
 ```
 
 
@@ -226,6 +226,10 @@ mean(mles_boot) - theta
 --
 
 ```{r}
-(n - 1)/n * theta - theta
+n/(n + 1) * theta - theta
 ```
 
+
+---
+# True Answer
+--
