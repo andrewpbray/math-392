@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Week Five</title>
+    <meta charset="utf-8" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Week Five
+
+---
+
+
+
+
+# The Bootstrap Distribution
+
+The bootstrap distribution of a statistic is an approximation to the sampling distribution of that statistic.
+
+
+---
+# Sampling Distribution of `\(X_{max}\)`
+--
+
+Let `\(X_1, X_2, \ldots X_n\sim \textrm{Unif}(0, \theta)\)`. We estimate the parameter using `\(\hat{\theta}_{MLE} = \textrm{max}(X_1, X_2, \ldots X_n)\)`. 
+
+We can approximate the sampling distribution using simulation.
+--
+
+
+```r
+set.seed(501)
+n &lt;- 30
+theta &lt;- 250
+it &lt;- 50000
+mles &lt;- rep(NA, it)
+
+for (i in 1:it) {
+  x &lt;- runif(n, 0, theta)
+  mles[i] &lt;- max(x)
+}
+```
+
+
+---
+# Sampling Distribution of `\(X_{max}\)`, cont.
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Bootstrapping `\(X\)`
+--
+
+A single bootstrap sample `\(X*\)` is a sample of size `\(n\)` drawn from `\(X\)` with replacement.
+
+
+```r
+x &lt;- runif(n, 0, theta)
+x_boot &lt;- sample(x, size = n, replace = TRUE)
+```
+
+--
+
+
+```r
+x_boot
+```
+
+```
+##  [1] 130.08206 184.69947 130.08206 166.76289 166.76289 144.48978 177.95563
+##  [8] 130.08206 161.87272 100.67981 105.92356 208.73415 215.66140 116.70479
+## [15] 116.70479 207.44917 105.92356 242.36524 184.69947 107.93079  50.23713
+## [22] 116.70479  50.23713 116.70479 138.73646 184.69947 208.73415  59.57112
+## [29] 161.87272  76.66359
+```
+
+--
+
+
+```r
+x
+```
+
+```
+##  [1] 177.95563 161.87272  50.23713 215.66140 184.69947 166.76289 107.93079
+##  [8] 100.67981 165.83911  39.31915  16.36533 138.73646 208.73415 116.70479
+## [15] 221.84881 105.92356  14.54358  53.21851 207.44917  59.57112 223.82497
+## [22] 144.48978 111.33642 223.48183  76.66359 132.70901 158.68602 130.08206
+## [29]  77.42087 242.36524
+```
+
+
+---
+# Bootstrapping `\(X\)`, cont.
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Bootstrapping `\(X_{max}\)`
+--
+
+
+```r
+B &lt;- 50000
+mles_boot &lt;- rep(NA, B)
+for (i in 1:B) {
+  x_boot &lt;- sample(x, size = n, replace = TRUE)
+  mles_boot[i] &lt;- max(x_boot)
+}
+```
+
+
+---
+# Bootstrap Distribution of `\(X_{max}\)`
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Bootstrap vs Sampling Dist.
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Bootstrap vs Sampling Dist.
+--
+
+`\(n = 50\)`
+`\(B = 1000\)`
+
+&lt;img src="figs/boot-a.png" width="1088" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Bootstrap vs Sampling Dist.
+--
+
+`\(n = 9\)`
+`\(B = 1000\)`
+
+&lt;img src="figs/boot-b.png" width="1131" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Using the Bootstrap
+--
+
+- Does not improve your estimate of the **center** of the sampling distribution.
+
+--
+
+- At reasonable n, can provide a useful estimate of the **spread** and **shape** of the distribution.
+
+--
+
+- Also useful for estimating the **bias**.
+
+
+---
+# Recall: Sampling Distribution of `\(X_{max}\)`
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /&gt;
+
+--
+
+
+```r
+mean(mles) - theta
+```
+
+```
+## [1] -8.046151
+```
+
+
+---
+# Bootstrap Distribution of `\(X_{max}\)`
+--
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /&gt;
+
+
+--
+
+
+```r
+mean(mles_boot) - theta
+```
+
+```
+## [1] -14.56114
+```
+
+
+---
+# True Answer
+--
+
+
+```r
+(n - 1)/n * theta - theta
+```
+
+```
+## [1] -8.333333
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
