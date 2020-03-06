@@ -224,8 +224,141 @@ n/(n + 1) * theta - theta
 
 
 ---
-# True Answer
+# Checking Coverage
 --
+
+.tiny[
+
+```r
+# Percentile Bootstrap
+n &lt;- 8
+a &lt;- .05
+alpha &lt;- 5
+beta &lt;- 1
+mu &lt;- alpha/beta
+n_C_X &lt;- 1000
+B &lt;- 1000
+has_theta &lt;- rep(NA, n_C_X)
+boot_means &lt;- rep(NA, B)
+for (i in 1:n_C_X) {
+  x &lt;- rgamma(n, alpha, beta)
+  for (j in 1:B) {
+    x_boot &lt;- sample(x, n, replace = TRUE)
+    boot_means[j] &lt;- mean(x_boot)
+  }
+  q1 &lt;- quantile(boot_means, a/2)
+  q2 &lt;- quantile(boot_means, 1 - a/2)
+  has_theta[i] &lt;- q1 &lt; mu &amp; mu &lt; q2
+}
+mean(has_theta)
+```
+]
+
+---
+# Checking Coverage (in parallel)
+--
+
+.tiny[
+
+```r
+library(foreach)
+library(doParallel)
+registerDoParallel(detectCores() - 1)
+# Percentile Bootstrap Parallel
+n_C_X &lt;- 1000
+B &lt;- 1000
+boot_means &lt;- rep(NA, B)
+i_index &lt;- as.list(1:n_C_X)
+has_theta &lt;- foreach(dat = i_index) %dopar% {
+  x &lt;- rgamma(n, alpha, beta)
+  for (j in 1:B) {
+    x_boot &lt;- sample(x, n, replace = TRUE)
+    boot_means[j] &lt;- mean(x_boot)
+  }
+  q1 &lt;- quantile(boot_means, a/2)
+  q2 &lt;- quantile(boot_means, 1 - a/2)
+  q1 &lt; mu &amp; mu &lt; q2
+}
+mean(unlist(has_theta))
+```
+]
+
+
+---
+# Bootstrap-t CI
+--
+
+.tiny[
+
+```r
+# Bootstrap-t CI Coverage Check
+n_C_X &lt;- 1000
+B1 &lt;- 1000
+boot_means &lt;- rep(NA, B1)
+t_stats &lt;- rep(NA, B1)
+i_index &lt;- as.list(1:n_C_X)
+has_theta &lt;- foreach(dat = i_index) %dopar% {
+  x &lt;- rgamma(n, alpha, beta)
+  for (j in 1:B1) {
+    x_boot &lt;- sample(x, n, replace = TRUE)
+    t_stats[j] &lt;- (mean(x_boot) - mean(x)) / (sd(x_boot)/sqrt(n))
+  }
+  q1 &lt;- quantile(t_stats, .025)
+  q2 &lt;- quantile(t_stats, .975)
+  (mean(x) + q1 * sd(x)/sqrt(n) &lt; mu) &amp;
+    (mu &lt; mean(x) + q2 * sd(x)/sqrt(n) )
+}
+mean(unlist(has_theta))
+})
+```
+]
+
+---
+# Bootstrap-t CI (with Bootstrap SE)
+--
+
+.tiny[
+
+```r
+# Double Bootstrap-t CI Coverage Check #DANGER! Computation ahead
+n_C_X &lt;- 1000
+B1 &lt;- 300
+B2 &lt;- 300
+boot_means &lt;- rep(NA, B1)
+boot_boot_means &lt;- rep(NA, B2)
+se_means &lt;- rep(NA, B1)
+has_theta &lt;- foreach(dat = i_index) %dopar% {
+  x &lt;- rgamma(n, alpha, beta)
+  for (j in 1:B1) {
+    x_boot &lt;- sample(x, n, replace = TRUE)
+    boot_means[j] &lt;- mean(x_boot)
+    for (k in 1:B2) {
+      x_boot_boot &lt;- sample(x, n, replace = TRUE)
+      boot_boot_means[k] &lt;- mean(x_boot_boot)
+    }
+    se_means[j] &lt;- sd(boot_boot_means)
+  }
+  t_stats &lt;- (boot_means - mean(x))/se_means
+  q1 &lt;- quantile(t_stats, .025)
+  q2 &lt;- quantile(t_stats, .975)
+  has_theta[i] &lt;- (mean(x) + q1 * (sd(x)/sqrt(n)) &lt; mu) &amp;
+    (mu &lt; mean(x) + q2 * (sd(x)/sqrt(n)))
+}
+mean(unlist(has_theta))
+```
+]
+
+---
+# ECDFs
+--
+
+
+```r
+ggplot(data.frame(x = .01), aes(x = x)) +
+  stat_function(fun = pgamma, args = list(shape = alpha, rate = beta))
+```
+
+&lt;img src="week-5-confidence-intervals_files/figure-html/limit-of-ecdfs-1.png" style="display: block; margin: auto;" /&gt;
     </textarea>
 <style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
 <script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
@@ -273,24 +406,7 @@ if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
     }
     deleted = true;
   });
-})();
-// adds .remark-code-has-line-highlighted class to <pre> parent elements
-// of code chunks containing highlighted lines with class .remark-code-line-highlighted
-(function(d) {
-  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
-  const preParents = [];
-  const findPreParent = function(line, p = 0) {
-    if (p > 1) return null; // traverse up no further than grandparent
-    const el = line.parentElement;
-    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
-  };
-
-  for (let line of hlines) {
-    let pre = findPreParent(line);
-    if (pre && !preParents.includes(pre)) preParents.push(pre);
-  }
-  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
-})(document);</script>
+})();</script>
 
 <script>
 (function() {

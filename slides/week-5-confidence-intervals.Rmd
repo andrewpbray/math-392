@@ -231,5 +231,135 @@ n/(n + 1) * theta - theta
 
 
 ---
-# True Answer
+# Checking Coverage
 --
+
+.tiny[
+```{r eval = FALSE}
+# Percentile Bootstrap
+n <- 8
+a <- .05
+alpha <- 5
+beta <- 1
+mu <- alpha/beta
+n_C_X <- 1000
+B <- 1000
+has_theta <- rep(NA, n_C_X)
+boot_means <- rep(NA, B)
+system.time({
+for (i in 1:n_C_X) {
+  x <- rgamma(n, alpha, beta)
+  for (j in 1:B) {
+    x_boot <- sample(x, n, replace = TRUE)
+    boot_means[j] <- mean(x_boot)
+  }
+  q1 <- quantile(boot_means, a/2)
+  q2 <- quantile(boot_means, 1 - a/2)
+  has_theta[i] <- q1 < mu & mu < q2
+}
+mean(has_theta)
+})
+```
+]
+
+---
+# Checking Coverage (in parallel)
+--
+
+.tiny[
+```{r eval = FALSE}
+library(foreach)
+library(doParallel)
+registerDoParallel(detectCores() - 1)
+# Percentile Bootstrap Parallel
+n_C_X <- 1000
+B <- 1000
+boot_means <- rep(NA, B)
+i_index <- as.list(1:n_C_X)
+has_theta <- foreach(dat = i_index) %dopar% {
+  x <- rgamma(n, alpha, beta)
+  for (j in 1:B) {
+    x_boot <- sample(x, n, replace = TRUE)
+    boot_means[j] <- mean(x_boot)
+  }
+  q1 <- quantile(boot_means, a/2)
+  q2 <- quantile(boot_means, 1 - a/2)
+  q1 < mu & mu < q2
+}
+mean(unlist(has_theta))
+```
+]
+
+
+---
+# Bootstrap-t CI
+--
+
+.tiny[
+```{r eval = FALSE}
+# Bootstrap-t CI Coverage Check
+n_C_X <- 1000
+B1 <- 1000
+boot_means <- rep(NA, B1)
+t_stats <- rep(NA, B1)
+i_index <- as.list(1:n_C_X)
+has_theta <- foreach(dat = i_index) %dopar% {
+  x <- rgamma(n, alpha, beta)
+  for (j in 1:B1) {
+    x_boot <- sample(x, n, replace = TRUE)
+    t_stats[j] <- (mean(x_boot) - mean(x)) / (sd(x_boot)/sqrt(n))
+  }
+  q1 <- quantile(t_stats, .025)
+  q2 <- quantile(t_stats, .975)
+  (mean(x) + q1 * sd(x)/sqrt(n) < mu) &
+    (mu < mean(x) + q2 * sd(x)/sqrt(n) )
+}
+mean(unlist(has_theta))
+```
+]
+
+---
+# Bootstrap-t CI (with Bootstrap SE)
+--
+
+.tiny[
+```{r eval = FALSE}
+# Double Bootstrap-t CI Coverage Check #DANGER! Computation ahead
+n_C_X <- 1000
+B1 <- 300
+B2 <- 300
+boot_means <- rep(NA, B1)
+boot_boot_means <- rep(NA, B2)
+se_means <- rep(NA, B1)
+has_theta <- foreach(dat = i_index) %dopar% {
+  x <- rgamma(n, alpha, beta)
+  for (j in 1:B1) {
+    x_boot <- sample(x, n, replace = TRUE)
+    boot_means[j] <- mean(x_boot)
+    for (k in 1:B2) {
+      x_boot_boot <- sample(x, n, replace = TRUE)
+      boot_boot_means[k] <- mean(x_boot_boot)
+    }
+    se_means[j] <- sd(boot_boot_means)
+  }
+  t_stats <- (boot_means - mean(x))/se_means
+  q1 <- quantile(t_stats, .025)
+  q2 <- quantile(t_stats, .975)
+  has_theta[i] <- (mean(x) + q1 * (sd(x)/sqrt(n)) < mu) &
+    (mu < mean(x) + q2 * (sd(x)/sqrt(n)))
+}
+mean(unlist(has_theta))
+```
+]
+
+---
+# ECDFs
+--
+
+```{r limit-of-ecdfs}
+ggplot(data.frame(x = .01), aes(x = x)) +
+  stat_function(fun = pgamma, args = list(shape = alpha, rate = beta))
+```
+
+
+
