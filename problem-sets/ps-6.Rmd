@@ -1,0 +1,22 @@
+---
+title: "MATH 392 Problem Set 5"
+output: 
+  pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.align = "center", 
+                      message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+library(here)
+```
+
+
+## Exercise from the book
+
+**9.1**: 1, 2, 14 (plot power functions in R)
+
+**9.2**: 2, 3, 10
+
+**9.3**: 1, 2
