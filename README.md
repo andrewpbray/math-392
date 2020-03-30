@@ -5,6 +5,43 @@ Math 392 | Reed College | Spring 2020
 
 ### Schedule
 
+
+#### Week 9: Simple Linear Regression
+
+**Monday**
+- [Join class](https://zoom.us/232169858)
+- Parameters of Joint Distributions
+- Method of Least Squares
+- Reading: p. 689 - 697
+
+**Wednesday**
+- [Join class](https://zoom.us/232169858)
+- Simple Linear Regression Model
+- Reading: p. 698 - 706
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+**Friday**
+- [Join class](https://zoom.us/232169858)
+- Inference for Regression
+- Reading: p. 707 - 720
+- Problem Set 7 due Monday 8 pm on Gradescope
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+
+* * *
+
+#### Week 7/8: Hypothesis Tests
+
+* * *
+
+#### Week 6: Frequentist, Bayesian, and Bootstrap CI
+
+* * * 
+
+#### Week 5: Bootstrap Sampling Distributions
+
+* * *
+
 #### Week 4: Sampling Distributions of Estimators
 
 **Monday**
@@ -20,14 +57,6 @@ Math 392 | Reed College | Spring 2020
 - Reading: p. 485 - 493
 - Problem Set 4 due at 10 pm in the box outside my door
 
-
-#### Week 5: Bootstrap Sampling Distributions
-
-#### Week 6: Frequentist, Bayesian, and Bootstrap CI
-
-[Exam 1]
-
-#### Week 7: Fisher Information, Efficiency, and UMVUE
 
 * * *
 
