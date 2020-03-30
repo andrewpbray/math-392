@@ -14,9 +14,9 @@ library(here)
 
 ## Exercises from the book
 
-**9.1**: 4
+**11.1**: 4
 
-**9.2**: 2, 3, 4, 5
+**11.2**: 2, 3, 4, 5
 
 
 ## Additional Exercises
