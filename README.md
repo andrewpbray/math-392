@@ -9,7 +9,7 @@ Math 392 | Reed College | Spring 2020
 #### Week 9: Simple Linear Regression
 
 **Monday**
-- [Join class](https://zoom.us/232169858)
+- [Join class](https://zoom.us/j/232169858)
 - Parameters of Joint Distributions
 - Method of Least Squares
 - Reading: p. 689 - 697
