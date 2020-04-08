@@ -12,6 +12,12 @@ library(knitr)
 set.seed(1999) # set seed for reproducibility
 ```
 
+### Warm-up
+
+Using matrix notation and the hat matrix, find $Var(\hat{Y})$. 
+
+## MLR Simulator
+
 The core of this assignment is the creation of a MLR simulator that you will use to investigate the properties of the method. The model under investigation is the following.
 
 $$
