@@ -54,7 +54,7 @@ because it puts a hat on the Y.
 H is \emph{symmetric}.
 
 \begin{align}
-H' &= X(X'X)^{-1}X' \\
+H' &= [X(X'X)^{-1}X']' \\
 &= X'' [(X'X)^{-1}]'X' \\
 &= X [(X'X)']^{-1}X' \\
 &= X(X'X)^{-1}X' = H
@@ -151,7 +151,7 @@ This is equivalent to minimizing the penalized RSS (for the scalar $\lambda$):
 \begin{align}
 PRSS(\beta) &= (Y - X\beta)'(Y - X\beta) + \lambda \beta'\beta \\
 &= Y'Y - \beta'X'Y - Y'X\beta + \beta'X'X\beta + \lambda \beta'\beta \\
-&= Y'Y - 2\beta'X'Y.
+&= Y'Y - 2\beta'X'Y + \lambda \beta' \beta + \beta' X'X \beta.
 \end{align}
 
 To find the $\hat{\beta}_{ridge}$ that minimize this function, we take the derivative with respect to $\beta$, set to zero, and solve.
