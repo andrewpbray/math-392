@@ -54,8 +54,9 @@ Use your simulator to create an MC approximation of the true sampling distributi
 
 Consider two variations on the model:
 
-1. An alternate distribution of the $X$'s of your choosing.
-2. An alternate distribution for $\epsilon$ (though it still should be centered at 0).
+1. Change the marginal distribution of the $\epsilon$ (though it still should be centered at 0).
+2. Introduce non-zero covariance into the joint distribution of the $X$ (`rvmnorm()` is helpful here).
+3. Introduce non-zero covariance into the joint distribution of the $\epsilon$.
 
 Does the inference change for the statistics investigated in the previous exercise? For this part, you should be able to recycle much of your code from the previous part.
 

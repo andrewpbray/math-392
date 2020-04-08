@@ -1,0 +1,268 @@
+---
+title: "Multiple Linear Regression"
+author: "Math 392"
+subtitle: "The Hat Matrix and Ridge Regression"
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+### Preamble
+
+In the last lecture, we noted that the least squares estimate, $\hat{\beta} = (X'X)^{-1}X'Y$, is unique only if the matrix $X'X$ is invertible.
+
+Example: invert a 2 by 3 matrix.
+
+```{r error = TRUE}
+X <- matrix(c(1, 1, 1, 1, 3, 5), 
+            byrow = TRUE, nrow = 2)
+X
+solve(t(X) %*% X)
+```
+
+---
+
+What if we transpose $X$ so that it is tall rather than wide?
+
+```{r}
+X <- t(X)
+X
+solve(t(X) %*% X)
+```
+
+---
+# A Very Interesting Matrix: $H$
+
+Recall:
+
+$$
+\hat{Y} = X\hat{\beta} = X(X'X)^{-1}X'Y
+$$
+
+The "hat matrix", $H$,
+
+$$
+H = X(X'X)^{-1}X'
+$$
+
+because it puts a hat on the Y.
+
+---
+## Properties of $H$
+
+H is *symmetric*.
+
+\begin{align}
+H' &= X(X'X)^{-1}X' \\
+&= X'' [(X'X)^{-1}]'X' \\
+&= X [(X'X)']^{-1}X' \\
+&= X(X'X)^{-1}X' \\
+&= H
+\end{align}
+
+H is *idempotent*.
+
+\begin{align}
+H^2 &= X(X'X)^{-1}X'X(X'X)^{-1}X' \\
+&= X(X'X)^{-1}X' \\
+&= H
+\end{align}
+
+We can easily express the vector of *residuals*, $\hat{\epsilon}$.
+
+$$
+\hat{\epsilon} = Y - \hat{Y} = Y - HY = (I - H)Y
+$$
+
+---
+# Leverage
+
+Let $h_{i, j}$ denote the $(i, j)^{th}$ element of $H$. Then we can express the fitted value of the $i^{th}$ observation as
+
+$$\hat{Y}_i = h_{i, i}Y_i + \sum_{j \ne i}h_{i, j} Y_j$$
+
+
+---
+# Leverage, cont.
+
+In simple linear regression,
+
+\begin{align}
+H &= X(X'X)^{-1}X' \\
+&= 
+\end{align}
+
+ 
+ 
+ 
+For the $i^{th}$ observation:
+
+$$
+h_{i,i} = \frac{1}{n} + \frac{(x_i - \bar{x})^2}{SS_X}
+$$
+
+High leverage:
+
+$$h_{i, i} > 2 \, \textrm{avg}(h_{i,i}) = 2  \frac{p}{n}$$
+
+
+---
+# Exercises
+
+Using the hat matrix and its properties, find $E(\hat{\epsilon})$ and $Var(\hat{\epsilon})$.
+
+\begin{align}
+E(\hat{\epsilon}|X) &= E((I - H)Y|X) \\
+&= (I - H)E(Y|X) \\
+&= (I - H)X\beta \\
+&= x\beta - X(X'X)^{-1}X'X\beta \\
+&= 0
+\end{align}
+
+\begin{align}
+Var(\hat{\epsilon}|X) &= Var((I - H)Y) \\
+&= (I - H)Var(Y)(I - H)' \\
+&= (I - H)\sigma^2(I - H)' \\
+&= \sigma^2 (II' - HI' - IH' + HH') \\
+&= \sigma^2 (I - H - H + H) \\
+&= \sigma^2(I - H)
+\end{align}
+
+
+---
+# Ridge Regression
+
+Consider an alternative estimator for $\beta$.
+
+$$\hat{\beta}_{ridge} = \textrm{argmin}(RSS(\beta)) \quad \textrm{subject to} \quad c \ge \sum_{j = 1}^{p-1}\beta_j^2; \quad c \ge 0$$
+
+This is equivalent to minimizing the penalized RSS (for the scalar $\lambda$):
+
+\begin{align}
+PRSS(\beta) &= (Y - X\beta)'(Y - X\beta) + \lambda \beta'\beta \\
+&= Y'Y - \beta'X'Y - Y'X\beta + \beta'X'X\beta + \lambda \beta'\beta \\
+&= Y'Y - 2\beta'X'Y.
+\end{align}
+
+To find the $\hat{\beta}_{ridge}$ that minimize this function, we take the derivative with respect to $\beta$, set to zero, and solve.
+
+\begin{align}
+\frac{\partial \, PRSS}{\partial \, \beta} &= 0 -2X'Y + 2X'X\beta + 2 \lambda \beta = 0 \\
+X'Y &= (X'X + \lambda I)\beta \\
+\hat{\beta}_{ridge} &= (X'X + \lambda I)^{-1}X'Y
+\end{align}
+
+This approach to estimating $\beta$ was originally devised as a fix for situations when $X'X$ was non-invertible/singular due to multicollinearity of the predictors. 
+
+
+---
+# Preamble revisited
+
+Let's apply this technique to solve the problem of invertibility that we encountered in the preamble.
+
+```{r error = TRUE}
+X <- matrix(c(1, 1, 1, 1, 3, 5), byrow = TRUE, nrow = 2)
+X
+I <- diag(ncol(X))
+I
+```
+
+---
+
+```{r}
+lambda <- .5
+solve(t(X) %*% X + lambda * I)
+```
+
+
+---
+# Ridge on a tall matrix
+
+```{r error = TRUE}
+X <- t(X)
+X
+I <- diag(ncol(X))
+I
+```
+
+---
+
+```{r}
+solve(t(X) %*% X + lambda * I)
+```
+
+---
+# Ridge on a tall matrix, cont.
+
+```{r}
+Y <- c(3, 5, 6)
+# Ridge
+solve(t(X) %*% X + lambda * I) %*% t(X) %*% Y
+# OLS
+solve(t(X) %*% X) %*% t(X) %*% Y
+```
+
+What's wrong?
+
+---
+# Excluding the intercept
+
+```{r}
+X_no_int <- X[, -1]
+X_no_int <- X_no_int - mean(X_no_int)
+I <- 1
+# Ridge
+solve(t(X_no_int) %*% X_no_int + lambda * I) %*%
+  t(X_no_int) %*% Y
+# OLS
+solve(t(X_no_int) %*% X_no_int) %*% t(X_no_int) %*% Y
+```
+
+
+---
+# Ridge vs OLS
+
+```{r echo = FALSE, message = FALSE, fig.height = 6, fig.width = 7, fig.align="center"}
+B_ridge <- solve(t(X_no_int) %*% X_no_int + lambda * I) %*% t(X_no_int) %*% Y
+B_ols <- solve(t(X_no_int) %*% X_no_int) %*% t(X_no_int) %*% Y
+B_0 <- mean(Y)
+
+library(tidyverse)
+ggplot(data.frame(y = Y, x = X_no_int), aes(x = x, y = y)) +
+  geom_point() +
+  theme_bw() +
+  lims(x = c(-3, 3),
+       y = c(2, 7)) +
+  geom_abline(slope = B_ridge, intercept = B_0, color = "goldenrod") +
+  geom_abline(slope = B_ols, intercept = B_0, color = "steelblue") +
+  annotate(geom = "text", x = 2.7, y = 6.2, 
+           label = "Ridge", color = "goldenrod") +
+  annotate(geom = "text", x = 2, y = 6.6, 
+           label = "OLS", color = "steelblue")
+```
+
+---
+# Properties of $\hat{\beta}_{ridge}$
+
+\begin{align}
+E(\hat{\beta}_{ridge}|X) &= E((X'X + \lambda I)^{-1}X'Y|X) \\
+&= (X'X + \lambda I)^{-1}X'E(Y|X) \\
+&= (X'X + \lambda I)^{-1}X'X\beta
+\end{align}
+
+Therefore the ridge estimates are biased for any $\lambda \ne 0$.
+
+\begin{align}
+Var(\hat{\beta}_{ridge}|X) &= Var((X'X + \lambda I)^{-1}X'Y|X) \\
+&= (X'X + \lambda I)^{-1}X'Var(Y|X)[(X'X + \lambda I)^{-1}X']' \\
+&= (X'X + \lambda I)^{-1}X'\sigma^2 I [(X'X + \lambda I)^{-1}X']' \\
+&= \sigma^2 (X'X + \lambda I)^{-1} X'X (X'X + \lambda I)^{-1}
+\end{align}
+
+Note that as $\lambda \rightarrow \infty$, $Var(\hat{\beta}_{ridge}) \rightarrow 0$.
