@@ -48,7 +48,7 @@ Note that while working through the proof of the claim of Gauss-Markov Theorem, 
 3. $Var(\epsilon) = \sigma^2I$
 
 
-### Proof
+## Proof
 
 Let $\tilde{\beta} = CY$, $C = (X'X)^{-1}X' + D$ for any $p \times n$ non-zero matrix $D$. Note that this is an expression that characterizes *any* linear estimator based on different choices of $D$.
 
@@ -80,8 +80,18 @@ DX(X'X)^{-1} + DD']\\
 
 Since $\sigma^2DD'$ is a positive semi-definite matrix, this shows that *any* other linear estimator of $\beta$ will have a variance at least as large as the least squares estimates.
 
+#### Sidenote
+We know that $\sigma^2 DD'$ is positive semi-definite by putting it in place of $M$ in our definition of positive semi-definite
 
-### Postscript
+$$
+a'\sigma^2DD'a = \sigma^2 (D'a)'(D'a).
+$$
+$\sigma^2$ is a scalar, $(D'a)'$ is an $1 \times n$ vector, and $(D'a)$ is the same vector but transposed. The resulting vector multiplication is just the sum of the squares of all of those values, so as long as the values of $D$ are not all zero, the scalar will be positive.
+
+This also accords with our informal sense of a positive semi-definite matrix acting like a positive number: any non-zero number squared (read: $DD'$) is a positive number.
+
+
+## Postscript
 
 So now we can chalk up several reasons for why statisticians have been pleased with $\hat{\beta}_{LS}$ for hundreds of years now.
 
