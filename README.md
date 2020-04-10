@@ -5,6 +5,25 @@ Math 392 | Reed College | Spring 2020
 
 ### Schedule
 
+#### Week 10: Multiple Linear Regression
+
+**Monday**
+- [Join class](https://zoom.us/j/232169858)
+- Matrix Form of Regression
+
+**Wednesday**
+- [Join class](https://zoom.us/j/232169858)
+- The Hat Matrix and Ridge Regression
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+**Friday**
+- [Join class](https://zoom.us/j/232169858)
+- The Gauss-Markov Theorem
+    - [Video 1](https://zoom.us/rec/share/_-54Dfbt72NIXo3u9VHRWoQrO6O1eaa8gCcd_PoFn04Cw8irTjjIeUPW8IvRslfi?startTime=1586537701000)
+    - [Video 2](https://zoom.us/rec/share/_-54Dfbt72NIXo3u9VHRWoQrO6O1eaa8gCcd_PoFn04Cw8irTjjIeUPW8IvRslfi?startTime=1586538157000)
+    - [Video 3](https://zoom.us/rec/share/_-54Dfbt72NIXo3u9VHRWoQrO6O1eaa8gCcd_PoFn04Cw8irTjjIeUPW8IvRslfi?startTime=1586538421000)
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
 
 #### Week 9: Simple Linear Regression
 
