@@ -78,9 +78,10 @@ DX(X'X)^{-1} + DD']\\
 &= Var(\hat{\beta}_{LS}) + \sigma^2DD'
 \end{align}
 
-Since $\sigma^2DD'$ is a positive semi-definite matrix, this shows that *any* other linear estimator of $\beta$ will have a variance at least as large as the least squares estimates.
+were many of the terms cancel because if we're working with unbiased estimators, $DX = 0$. Since $\sigma^2DD'$ is a positive semi-definite matrix, this shows that *any* other linear unbiased estimator of $\beta$ will have a variance at least as large as the least squares estimates.
 
 #### Sidenote
+
 We know that $\sigma^2 DD'$ is positive semi-definite by putting it in place of $M$ in our definition of positive semi-definite
 
 $$
