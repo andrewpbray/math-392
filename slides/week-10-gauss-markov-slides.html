@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Multiple Linear Regression</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Math 392" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Multiple Linear Regression
+## The Gauss-Markov Theorem
+### Math 392
+
+---
+
+# Gauss-Markov Theorem
+
+**Claim**: `\(\hat{\beta}_{LS}\)` are the best linear unbiased estimates (BLUE) of `\(\beta\)`.
+
+
+---
+# What do we mean by *linear*?
+
+Linear refers to estimates that are a linear function of the random variable, which in the regression setting is `\(Y\)`.
+
+`$$\hat{\beta}_j = c_{1,j}Y_1 + c_{2,j}Y_2 + \ldots c_{n,j}Y_n$$`
+
+Or in matrix form:
+
+$$
+\hat{\beta} = CY
+$$
+In the least squares case, `\(C = (X'X)^{-1}X'\)`.  
+
+
+---
+# What do we mean by *unbiased*?
+
+The same thing that usually mean:
+
+`$$E(\hat{\beta}) = \beta.$$`
+
+
+---
+# What do we mean by *best*?
+
+Best = lowest MSE. Among unbiased estimators, this will be the one with the lowest variance. How do we compare variances two *vectors*?
+
+`\(\hat{\beta}_{LS}\)` is best if `\(Var(\hat{\beta}_{LS}) - Var(\tilde{\beta})\)` is positive semi-definite for all other estimates `\(\tilde{\beta}\)`.
+
+A `\(p \times p\)` matrix `\(M\)` is positive semi-definite if
+
+$$
+a'Ma \ge 0
+$$
+for all non-zero vectors `\(a \in \mathbb{R}^p\)`.
+
+
+---
+# Assumptions
+
+The proof assumes that
+
+1. `\(Y = X\beta + \epsilon\)`
+2. `\(E(\epsilon) = 0\)`
+3. `\(Var(\epsilon) = \sigma^2I\)`
+
+
+---
+# Proof
+
+Let `\(\tilde{\beta} = CY\)`, `\(C = (X'X)^{-1}X' + D\)` for any `\(p \times n\)` non-zero matrix `\(D\)`.
+
+`\begin{align}
+E(\tilde{\beta}) = E(CY) &amp;= CE(Y) \\
+&amp;= CE(X\beta + \epsilon) \\
+&amp;= CE(X\beta) + CE(\epsilon) \\
+&amp;= CX\beta \\
+&amp;= ((X'X)^{-1}X' + D)X\beta \\
+&amp;= (X'X)^{-1}X'X\beta + DX\beta \\
+&amp;= \beta + DX\beta
+\end{align}`
+
+Since we're interested in the class of unbiased estimators, `\(DX\)` must be 0.
+
+
+---
+# Proof, cont.
+
+`\begin{align}
+Var(\tilde{\beta}) &amp;= Var(CY) \\
+&amp;= CVar(Y)C' \\
+&amp;= C\sigma^2IC' \\
+&amp;= \sigma^2((X'X)^{-1}X' + D)[(X'X)^{-1}X' + D]' \\
+&amp;= \sigma^2((X'X)^{-1}X' + D)(X(X'X)^{-1} + D') \\
+&amp;= \sigma^2[(X'X)^{-1}X'X(X'X)^{-1} + (X'X)^{-1}X'D' +
+DX(X'X)^{-1} + DD']\\
+&amp;= \sigma^2(X'X)^{-1} + \sigma^2DD' \\
+&amp;= Var(\hat{\beta}_{LS}) + \sigma^2DD'
+\end{align}`
+
+Since `\(\sigma^2DD'\)` is a positive semi-definite matrix, this shows that *any* other linear estimator of `\(\beta\)` will have a variance at least as large as the least squares estimates.
+
+
+---
+# Postscript: Why we love OLS
+
+- As a loss function, `\(RSS\)` has some intuitive appeal.
+- `\(\hat{\beta}_{LS}\)` has a closed form.
+- `\(\hat{\beta}_{LS}\)` are BLUE (Gauss-Markov).
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
