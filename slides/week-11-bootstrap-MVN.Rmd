@@ -1,0 +1,300 @@
+---
+title: "Multiple Linear Regression"
+author: "Math 392"
+subtitle: "The Bootstrap, MVN"
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+```{r include = FALSE}
+library(tidyverse)
+```
+
+
+# Resampling methods: two methods
+
+There are two general approaches to getting bootstrap intervals for your regression estimates (for $\beta$, $\hat{E}(Y|X)$, $[Y|X]$):
+
+1. Bootstrap the **cases**.
+2. Bootstrap the **residuals**.
+
+---
+# Aside:
+
+Bootstrap is not a good idea when your you have few observations, let's simulate a data set of moderate size.
+
+```{r}
+set.seed(8134)
+n <- 35
+x0 <- 1
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+X <- as.matrix(data.frame(x0, x1, x2))
+B <- c(-3, .5, 2)
+sig_sq <- 2.25
+epsilon <- rnorm(n, mean = 0, sd = sqrt(sig_sq))
+Y <- X %*% B + epsilon
+df <- data.frame(X, Y)
+```
+
+
+---
+# Bootstrap the cases
+
+```{r}
+b1 <- sample_frac(df, replace = TRUE)
+head(b1)
+b2 <- sample_frac(df, replace = TRUE)
+head(b2)
+```
+
+
+---
+# Compute estimates for each b
+
+```{r}
+mb1 <- lm(Y ~ x1 + x2, data = b1)
+coef(mb1)
+mb2 <- lm(Y ~ x1 + x2, data = b2)
+coef(mb2)
+```
+
+
+---
+# Full bootstrap
+
+```{r cache=T}
+it <- 5000
+beta_hp <- rep(NA, it)
+for (i in 1:it) {
+  b <- sample_frac(df, replace = TRUE)
+  beta_hp[i] <- lm(Y ~ x1 + x2, data = b)$coef[2]
+}
+sd(beta_hp)
+m1 <- lm(Y ~ x1 + x2, data = df)
+summary(m1)$coef
+```
+
+
+---
+# Thoughts on that... 
+
+It seemed to work fine but it is a bit odd because the bootstrap procedure suggests that *both* the $X$ and the $Y$ are random variables.
+
+Can we devise a procedure that is in closer accordance with our idea of regression as conditioning on the values of $X$?
+
+*After conditioning on the values of $X$, $Y$ is only random through the random vector $\epsilon$. Why don't we bootstrap that?*
+
+$$\mathbf{Y} = X\beta + \mathbf{\epsilon}$$
+
+---
+# Bootstrap Residuals visualized
+
+---
+# Bootstrap residuals
+
+```{r cache=T}
+it <- 5000
+beta_hp <- rep(NA, it)
+m1 <- lm(Y ~ x1 + x2, data = df)
+b <- df
+for (i in 1:it) {
+  b$Y <- m1$fit + sample(m1$res, replace = TRUE)
+  beta_hp[i] <- lm(Y ~ x1 + x2, data = b)$coef[2]
+}
+sd(beta_hp)
+summary(m1)$coef
+```
+
+---
+# Guidance on using the bootstrap
+
+- If you are confident that you have the correct *mean function*, bootstrapping the residuals is more appropriate.
+
+- If you have no idea about the form of the mean function, bootstrapping the cases is the safer / more conservative approach.
+
+
+---
+# The Multivariate Normal Distribution
+
+We can write *any* linear estimator as
+
+$$\hat{\beta} = CY$$
+
+Therefore $\hat{\beta}$ is a linear combination of the $Y$. If we assume
+
+$$
+Y \sim N(X\beta, \epsilon)
+$$
+
+Then we know (through MGFs) that $\hat{\beta}$ is also normally distributed. More specifically, when $C = (X'X)^{-1}X'$,
+
+$$
+\hat{\beta} \sim N(\beta, \sigma^2(X'X)^{-1})
+$$
+
+---
+# The Multivariate Normal Distribution, cont.
+
+```{r echo = FALSE}
+set.seed(587221)
+```
+
+The general form of the multivariate Normal distribution is
+
+$$
+\boldsymbol{X} \sim N(\boldsymbol{\mu}, \boldsymbol{\Sigma})
+$$
+<br>
+<br>
+<br>
+<br>
+
+Where $\boldsymbol{X}$ is a $n \times p$ matrix, $\boldsymbol{\mu}$ is a $p \times 1$ mean vector, and $\boldsymbol{\Sigma}$ is a $p \times p$ variance/covariance matrix.
+
+You can access densities and random number generated for this distribution via the `dmvnorm()` and `rmvnorm()` functions
+
+```{r eval = FALSE}
+library(mvtnorm)
+rmvnorm(n, mean = mu, sigma = Sigma)
+```
+
+---
+# Simulating from MVN
+
+First, specify parameters,
+
+```{r}
+mu_vec <- c(1, 2, 3)
+sigma_mat <- matrix(c(.5,  0, .7,
+                       0, .5,  0,
+                      .7,  0,  2),
+                    ncol = 3, byrow = TRUE)
+sigma_mat
+```
+
+---
+# Simulating from MVN, cont.
+
+then, generate random variables.
+
+```{r echo = FALSE}
+library(mvtnorm)
+```
+
+```{r}
+rmvnorm(1, mean = mu_vec, sigma = sigma_mat)
+rmvnorm(1, mean = mu_vec, sigma = sigma_mat)
+rmvnorm(10, mean = mu_vec, sigma = sigma_mat)
+```
+
+---
+# Visualizing the MVN
+
+```{r message = FALSE, fig.align="center", fig.height = 5.5, fig.width = 5.5}
+X <- rmvnorm(100, mean = mu_vec, sigma = sigma_mat)
+library(GGally)
+ggpairs(as.data.frame(X))
+```
+
+---
+# Two ways to view a dataset $Y$
+
+- $n$ iid draws from $N(\mu, \sigma^2)$
+
+<br>
+<br>
+<br>
+<br>
+<br>
+
+- One draw from $N(\mu_n, \sum_{n\times n})$
+
+---
+# Small example $(n = 3)$
+
+```{r}
+set.seed(8134)
+n <- 3
+x0 <- 1
+x1 <- rnorm(n)
+x2 <- rnorm(n)
+x3 <- rnorm(n)
+x4 <- rnorm(n)
+X <- as.matrix(data.frame(x0, x1, x2, x3, x4))
+B <- c(-3, .5, 2, 1, -.8)
+sig_sq <- 2.25
+epsilon <- rnorm(n, mean = 0, sd = sqrt(sig_sq))
+Y <- X %*% B + epsilon
+df <- data.frame(Y, X)
+df
+```
+
+---
+# Three iid scalar draws
+
+A partial view:
+
+```{r echo = FALSE, fig.align = "center", fig.height=6, fig.width=6}
+ggplot(df, aes(x = x1, y = Y)) +
+  geom_point(size = 4) +
+  theme_bw()
+```
+
+---
+# One vector draw
+
+```{r echo = FALSE, fig.align = "center", fig.height=7, fig.width=7, message = FALSE}
+library(plotly)
+df2 <- data.frame(Y1 = df$Y[1],
+                 Y2 = df$Y[2],
+                 Y3 = df$Y[3])
+df2 %>%
+  plot_ly(x = ~Y1, y = ~Y2, z = ~Y3)
+```
+
+
+---
+# What does hypothetical resampling look like?
+
+```{r echo = FALSE, fig.align = "center", fig.height=6, fig.width=6}
+epsilon <- rnorm(n * 10, mean = 0, sd = sqrt(sig_sq))
+means <- c(X %*% B)
+Y <- means + epsilon
+df <- data.frame(Y, X, sample = factor(rep(1:10, each = n)))
+
+ggplot(df, aes(x = x1, y = Y, col = sample)) +
+  geom_point(size = 4) +
+  theme_bw()
+```
+
+---
+# 10 vector draws
+
+```{r echo = FALSE, fig.align = "center", fig.height=7, fig.width=7, message = FALSE}
+library(plotly)
+df2 <- data.frame(Y1 = means[1] + rnorm(10, mean = 0, sd = sqrt(sig_sq)),
+                  Y2 = means[1] + rnorm(10, mean = 0, sd = sqrt(sig_sq)),
+                  Y3 = means[1] + rnorm(10, mean = 0, sd = sqrt(sig_sq)))
+df2 %>%
+  plot_ly(x = ~Y1, y = ~Y2, z = ~Y3)
+```
+
+---
+# 300 vector draws
+
+```{r echo = FALSE, fig.align = "center", fig.height=7, fig.width=7, message = FALSE}
+library(plotly)
+df2 <- data.frame(Y1 = means[1] + rnorm(300, mean = 0, sd = sqrt(sig_sq)),
+                  Y2 = means[1] + rnorm(300, mean = 0, sd = sqrt(sig_sq)),
+                  Y3 = means[1] + rnorm(300, mean = 0, sd = sqrt(sig_sq)))
+df2 %>%
+  plot_ly(x = ~Y1, y = ~Y2, z = ~Y3)
+```
