@@ -10,16 +10,16 @@ Math 392 | Reed College | Spring 2020
 **Monday**
 - [Join class](https://zoom.us/j/232169858)
 - Multivariate Normal
-- Logistic Regression and GLMS
 
 **Wednesday**
 - [Join class](https://zoom.us/j/232169858)
-- Inference for MLEs
+- Generalized Linear Models
+- Logistic Regression
 - [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
 
 **Friday**
 - [Join class](https://zoom.us/j/232169858)
-- Bayesian Regression
+- Inference for the MLE
 - [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
 
 * * *
