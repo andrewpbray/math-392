@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Multiple Linear Regression</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Math 392" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Multiple Linear Regression
+## Inference for the MLE
+### Math 392
+
+---
+
+
+
+
+
+# Running example
+
+Let 
+
+`$$X \sim \textrm{Pois}(\theta)$$`
+
+`$$f(x|\theta) = \frac{1}{x!}\theta^xe^{-\theta}, \quad x \ge 0, \quad \theta &gt; 0,  \quad \hat{\theta}^{MLE} = \bar{x}$$`
+The likelihood function `\(L\)`:
+
+`$$L(\theta) = f(x_1 | \theta)f(x_2 | \theta) \ldots f(x_n | \theta)$$`
+
+The log-likelihood function `\(l\)`:
+
+`$$l(\theta) = \log (f(x_1 | \theta)) + \log(f(x_1 | \theta)) + \ldots + \log(f(x_1 | \theta))$$`
+The `\(\hat{\theta}^{MLE}\)` is the solution to setting `\(\frac{\partial}{\partial \theta} \log(f(\mathbf{x}|\theta))\)` to `\(0\)`.
+
+---
+# Score function
+
+Define
+
+`$$U = \frac{\partial}{\partial \theta} \log(f(X|\theta))$$`
+
+as the *score function* or *score statistic*.
+
+Note:
+
+- `\(\theta\)` is fixed
+- `\(X\)` is a single RV
+- therefore `\(U\)` is a RV
+
+---
+# Understanding `\(U\)`
+
+What is its *expected value*?
+
+`\begin{align}
+E(U) &amp;= E(\frac{\partial}{\partial \theta} \log(f(x|\theta))) \\
+&amp;= \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta)\textrm{d}x \\
+&amp;= \int \frac{\partial}{\partial \theta} f(x|\theta) \frac{1}{f(x|\theta)} f(x|\theta)\textrm{d}x \\
+&amp;= \int \frac{\partial}{\partial \theta} f(x|\theta) \textrm{d}x \\
+&amp;= \frac{\partial}{\partial \theta} \int f(x|\theta) \textrm{d}x \\
+&amp;= \frac{\partial}{\partial \theta} \int 1 \\
+&amp;= 0
+\end{align}`
+
+---
+# Poisson RV
+
+Let `\(X \sim \textrm{Poi}(\theta)\)`.
+
+
+```r
+n &lt;- 10000
+theta &lt;- 5
+x &lt;- rpois(n, theta)
+```
+
+&lt;img src="week-11-normality-of-MLEs_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Score RV 
+
+Define `\(U = \frac{\partial}{\partial \theta} \log f(X | \theta)\)`.
+
+`\begin{align}
+U &amp;= \frac{\partial}{\partial \theta} \log \frac{1}{x!}\theta^xe^{-\theta} \\
+&amp;= \frac{\partial}{\partial \theta} (-\log (x!) + x \log (\theta) - \theta) \\
+&amp;= 0 + x \frac{1}{\theta} - 1
+\end{align}`
+
+
+```r
+U &lt;- x / theta - 1
+```
+
+---
+# Distribution of `\(X\)` vs `\(U\)`
+
+&lt;img src="week-11-normality-of-MLEs_files/figure-html/unnamed-chunk-5-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Distribution of `\(U\)`
+
+&lt;img src="week-11-normality-of-MLEs_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Finding the variance of `\(U\)`
+
+Recall `\(Var(U) = E(U^2) - E(U)^2\)`, so we seek `\(E(U^2)\)`. Begin by writing down our previous result, that the expected value is zero, and take derivatives of both sides.
+
+`\begin{align}
+\frac{\partial}{\partial \theta} 0 &amp;= \frac{\partial}{\partial \theta} \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta)\textrm{d}x \\
+0 &amp;= \int \frac{\partial^2}{\partial \theta^2} \log(f(x|\theta)) f(x|\theta)\textrm{d}x + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\partial}{\partial \theta} f(x|\theta)\textrm{d}x\\
+0 &amp;= E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\frac{\partial}{\partial \theta} f(x|\theta)}{f(x|\theta)} f(x|\theta) \textrm{d}x \\
+0 &amp;= E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta)  \textrm{d}x \\
+\\
+\end{align}`
+
+  
+  
+
+`$$\rightarrow Var(U) = E(U^2) = - E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) = I(\theta)$$`
+
+---
+# Score variance
+
+For `\(X \sim \textrm{Pois}(\theta)\)`,
+
+`\begin{align}
+Var(U) &amp;= -E\left(\frac{\partial^2}{\partial \theta^2} \log(f(X|\theta))\right) \\
+&amp;= -E\left(\frac{\partial}{\partial \theta} (x \frac{1}{\theta} - 1) \right) \\
+&amp;= -E\left( -x\frac{1}{\theta^2} \right) = \frac{1}{\theta}.
+\end{align}`
+
+
+```r
+1/theta
+```
+
+```
+## [1] 0.2
+```
+
+```r
+var(U)
+```
+
+```
+## [1] 0.1961535
+```
+
+
+---
+# A CLT for `\(\bar{U}\)`
+
+`\(U(X)\)` is a function of a single RV. If we have an iid sample of size `\(n\)` - `\(X_1, X_2, \ldots, X_n\)` - we have a corresponding iid sample `\(U(X_1), U(X_2), \ldots, U(X_n)\)`, each with mean 0 and variance `\(I(\theta)\)`, by the CLT,
+
+$$
+\frac{\frac{1}{n} \sum_{i = 1}^{n}U_i - 0}{\sqrt{I(\theta)/n}} \quad  \overset{D}{\rightarrow} \quad N(0, 1)
+$$
+
+---
+# CLT for `\(\bar{U}\)`
+
+
+```r
+n &lt;- 500
+theta &lt;- 5
+it &lt;- 1000
+U_bar &lt;- rep(NA, it)
+for (i in 1:it) {
+  x &lt;- rpois(n, theta)
+  U &lt;- x / theta - 1
+  U_bar[i] &lt;- mean(U)
+}
+```
+
+---
+# CLT for `\(\bar{U}\)`
+
+&lt;img src="week-11-normality-of-MLEs_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# CLT for `\(\bar{U}\)`
+
+
+```r
+var(U_bar)
+```
+
+```
+## [1] 0.0004181934
+```
+
+```r
+(1 / theta) / n
+```
+
+```
+## [1] 4e-04
+```
+
+
+---
+# The Asymptotic Normality of the MLE
+
+**Theorem**: Let `\(X_1, X_2, \ldots, X_n\)` be an iid sample from a regular family with parameter `\(\theta\)`. Let `\(\hat{\theta}^{MLE}\)` be the solution to the equation
+
+$$ \frac{\partial}{\partial \theta}\log (f(x1, x2, \ldots, x_n|\theta)) = 0$$
+
+then
+
+`$$\sqrt{nI(\theta)}(\hat{\theta}^{MLE} - \theta) \quad  \overset{D}{\rightarrow} \quad N(0, 1)$$`
+
+---
+**Proof**: Consider `\(U_i = \frac{\partial}{\partial \theta} \log(f(X_i|\theta))\)` as a function of both `\(X_i\)` and `\(\theta\)`. If we sum the `\(U_i\)` and expand around the true value:
+
+`$$\sum_{i = 1}^n \frac{\partial}{\partial \theta} \log(f(x_i|\hat{\theta})) \approx \sum_{i = 1}^n \frac{\partial}{\partial \theta} \log(f(x_i| \theta)) + \left[ \sum_{i = 1}^n \frac{\partial^2}{\partial \theta^2} \log(f(x_i| \theta)) \right] (\hat{\theta} - \theta)$$`
+
+Since `\(\hat{\theta}\)` is the MLE, the term on the left is 0. Now we can write this as a function of `\(U_i\)` and rearrange:
+
+`\begin{align}
+\sum_{i = 1}^n U_i &amp;= - \sum_{i = 1}^n \frac{\partial^2}{\partial \theta^2} \log(f(x_i| \theta)) (\hat{\theta} - \theta) \\
+\frac{\frac{1}{n}\sum_{i = 1}^n U_i}{\sqrt{I(\theta)/n}} &amp;= \frac{-\frac{1}{n} \sum_{i = 1}^n \frac{\partial^2}{\partial \theta^2} \log(f(x_i| \theta))}{\sqrt{I(\theta)/n}} (\hat{\theta} - \theta)
+\end{align}`
+
+We recognize the LHS as an RV that converges to the standard normal, so what is the RHS?
+
+---
+
+By the LLN,
+
+`$$-\frac{1}{n} \sum_{i = 1}^n \frac{\partial^2}{\partial \theta^2} \log(f(x_i| \theta)) \rightarrow I(\theta),$$`
+
+so we can rewrite the RHS as
+
+`$$\frac{I(\theta)}{(I(\theta)/n)^{1/2}}(\hat{\theta} - \theta) = \sqrt{nI(\theta)} (\hat{\theta} - \theta) \quad \overset{D}{\rightarrow} \quad N(0, 1)$$`
+
+or
+
+`$$\hat{\theta} \quad \overset{D}{\rightarrow} \quad N \left(\theta, \frac{1}{\sqrt{nI(\theta)}}\right)$$`
+
+
+---
+# CLT for `\(\hat{\theta}^{MLE}\)`
+
+
+```r
+it &lt;- 1000
+MLE &lt;- rep(NA, it)
+for (i in 1:it) {
+  n &lt;- 500
+  theta &lt;- 5
+  x &lt;- rpois(n, theta)
+  MLE[i] &lt;- mean(x)
+}
+```
+
+
+---
+# CLT for `\(\hat{\theta}^{MLE}\)`
+
+&lt;img src="week-11-normality-of-MLEs_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# CLT for `\(\hat{\theta}^{MLE}\)`
+
+
+```r
+z &lt;- sqrt(n * (1 / theta)) * (MLE - theta)
+```
+
+&lt;img src="week-11-normality-of-MLEs_files/figure-html/unnamed-chunk-14-1.png" style="display: block; margin: auto;" /&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
