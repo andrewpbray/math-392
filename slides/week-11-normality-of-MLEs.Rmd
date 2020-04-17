@@ -20,7 +20,22 @@ knitr::opts_chunk$set(message = FALSE,
 set.seed(32)
 ```
 
+---
+# Mathematical tools
 
+**Chain Rule**
+
+$$(f(g(x)))' = f'(g(x))g'(x)$$
+
+**Product Rule**
+
+$$(f(x)g(x))' = f'(x)g(x) + f(x)g'(x)$$
+
+**Taylor Expansion**
+
+$$f(a) + \frac{f'(a)}{1!}(x - a) + \frac{f''(a)}{2!}(x - a)^2 + \ldots$$
+
+---
 # Running example
 
 Let 
@@ -59,18 +74,18 @@ What is its *expected value*?
 
 \begin{align}
 E(U) &= E(\frac{\partial}{\partial \theta} \log(f(x|\theta))) \\
-&= \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta)\textrm{d}x \\
-&= \int \frac{\partial}{\partial \theta} f(x|\theta) \frac{1}{f(x|\theta)} f(x|\theta)\textrm{d}x \\
+&= \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta_0)\textrm{d}x \\
+&= \int \frac{\partial}{\partial \theta} f(x|\theta) \frac{1}{f(x|\theta)} f(x|\theta_0)\textrm{d}x \\
 &= \int \frac{\partial}{\partial \theta} f(x|\theta) \textrm{d}x \\
 &= \frac{\partial}{\partial \theta} \int f(x|\theta) \textrm{d}x \\
-&= \frac{\partial}{\partial \theta} \int 1 \\
+&= \frac{\partial}{\partial \theta} 1 \\
 &= 0
 \end{align}
 
 ---
 # Poisson RV
 
-Let $X \sim \textrm{Poi}(\theta)$.
+Let $X \sim \textrm{Poi}(\theta_0)$.
 
 ```{r}
 n <- 10000
@@ -99,14 +114,23 @@ U &= \frac{\partial}{\partial \theta} \log \frac{1}{x!}\theta^xe^{-\theta} \\
 &= 0 + x \frac{1}{\theta} - 1
 \end{align}
 
-```{r}
-U <- x / theta - 1
-```
+When is $E(U) = E(X \frac{1}{\theta} - 1) = 0$?
+
+\begin{align}
+E(X \frac{1}{\theta} - 1) &= E(X)\frac{1}{\theta} - 1 \\
+&= \theta_0 \frac{1}{\theta} - 1 
+\end{align}
+
+When we use $\theta_0$ in our density.
 
 ---
 # Distribution of $X$ vs $U$
 
-```{r echo = FALSE, fig.width = 8}
+```{r}
+U <- x / theta - 1
+```
+
+```{r echo = FALSE, fig.width = 8, fig.height = 6}
 pu <- ggplot(data.frame(U), aes(x = U)) +
   geom_bar() +
   xlim(c(0, 15)) +
@@ -131,10 +155,10 @@ ggplot(data.frame(U), aes(x = U)) +
 Recall $Var(U) = E(U^2) - E(U)^2$, so we seek $E(U^2)$. Begin by writing down our previous result, that the expected value is zero, and take derivatives of both sides.
 
 \begin{align}
-\frac{\partial}{\partial \theta} 0 &= \frac{\partial}{\partial \theta} \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta)\textrm{d}x \\
-0 &= \int \frac{\partial^2}{\partial \theta^2} \log(f(x|\theta)) f(x|\theta)\textrm{d}x + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\partial}{\partial \theta} f(x|\theta)\textrm{d}x\\
-0 &= E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\frac{\partial}{\partial \theta} f(x|\theta)}{f(x|\theta)} f(x|\theta) \textrm{d}x \\
-0 &= E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta)  \textrm{d}x \\
+\frac{\partial}{\partial \theta} 0 &= \frac{\partial}{\partial \theta} \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) f(x|\theta_0)\textrm{d}x \\
+0 &= \int \frac{\partial^2}{\partial \theta^2} \log(f(x|\theta)) f(x|\theta_0)\textrm{d}x + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\partial}{\partial \theta} f(x|\theta_0)\textrm{d}x\\
+0 &= E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) + \int \frac{\partial}{\partial \theta} \log(f(x|\theta)) \frac{\partial}{\partial \theta} f(x|\theta_0) \frac{1}{f(x|\theta)} f(x|\theta) \textrm{d}x \\
+0 &= E\left(\frac{\partial^2}{\partial \theta^2} \log(f(x|\theta))\right) + \int \frac{\partial}{\partial \theta} \log(f(x|\theta_0)) \frac{\partial}{\partial \theta} \log(f(x|\theta_0)) f(x|\theta_0)  \textrm{d}x \\
 \\
 \end{align}
 
