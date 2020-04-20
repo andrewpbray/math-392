@@ -1,0 +1,442 @@
+---
+title: "In Review: Inference for Linear Models"
+author: "Math 392"
+subtitle: "Problem Set Debrief"
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(fig.align = "center", 
+                      message = FALSE, 
+                      warnings = FALSE)
+```
+
+
+# Inference in MLR
+
+### 1. $Var(\hat{\beta})$
+
+\begin{align}
+Var(\hat{\beta} | X) &= Var((X'X)^{-1}X'Y | X) \\
+&= (X'X)^{-1}X'Var(Y|X)X(X'X)^{-1} \\
+&= (X'X)^{-1}X'\sigma^2 I X(X'X)^{-1} \\
+&= \sigma^2 (X'X)^{-1}
+\end{align}
+
+
+---
+# Inference in MLR, cont.
+
+### 2. $Var(\hat{E}(Y|X))$
+
+\begin{align}
+Var(\hat{E}(Y|X = x_s)) &= Var(x_s\hat{\beta}) \\
+&= x_s Var(\hat{\beta}) x_s' \\
+&= x_s \sigma^2 (X'X)^{-1} x_s'
+\end{align}
+
+
+---
+# Inference in MLR, cont.
+
+### 3. $Var(Y|X = x_s))$
+
+\begin{align}
+Var(Y|X = x_s) &= Var(x_s\hat{\beta} + \epsilon) \\
+&= Var(x_s\hat{\beta}) + Var(\epsilon) \\
+&= x_s \sigma^2 (X'X)^{-1} x_s' + \sigma^2
+\end{align}
+
+
+---
+# Marginal distribution of the Error
+
+$$\epsilon \sim N(0, \sigma^2 I)$$
+
+```{r eval = FALSE}
+epsilon <- rnorm(n, mean = 0, sd = sigma_sq)
+```
+
+*Change the marginal distribution of the $\epsilon$ (though it still should be centered at 0).*
+
+$$\epsilon \sim Unif(-1, 1)$$
+
+```{r eval = FALSE}
+epsilon <- runif(n, -1, 1)
+```
+
+
+$$\epsilon \sim Lap(0, b)$$
+
+```{r eval = FALSE}
+library(rmutil)
+epsilon <- rlaplace(n, m = 0, s = b)
+```
+
+
+---
+
+```{r echo = FALSE, cache = TRUE}
+library(rmutil)
+library(mvtnorm)
+set.seed(403)
+B0 <- 1
+B1 <- 1
+B2 <- 1
+B <- c(B0, B1, B2)
+b <- .25
+
+n <- 100
+mean <- c(1, -1)
+cov <- matrix(c(1, 0, 0, 1),
+              byrow = TRUE, 
+              ncol = 2)
+X <- cbind(rep(1, n), rmvnorm(n, mean, cov))
+
+x_s <- c(1, 1, 1)
+it <- 5000
+beta <- rep(NA, it)
+E_y <- rep(NA, it)
+y_s <- rep(NA, it)
+for (j in 1:it) {
+  epsilon <- rlaplace(n, m = 0, s = b)
+  y <- X %*% B + epsilon
+  df <- data.frame(y, X)
+  fit <- lm(y ~ X2 + X3, data = df) 
+  beta[j] <- coef(fit)[2] #beta_1
+  E_y[j] <- coef(fit) %*% x_s
+  y_s[j] <- coef(fit) %*% x_s + rlaplace(1, m = 0, s = b)
+}
+```
+
+# $\hat{\beta}$
+
+```{r echo = FALSE, fig.height = 5}
+sigma <- sqrt(2 * b^2)
+var_theory <- sigma^2 * solve(t(X) %*% X) [2, 2]
+
+library(tidyverse)
+ggplot(data.frame(beta), aes(x = beta)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = B1, 
+                            sd = sqrt(var_theory)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+
+p_norm_qq <- ggplot(data.frame(beta), aes(sample = beta)) +
+  stat_qq() +
+  stat_qq_line(color = "goldenrod", lwd = 2) +
+  theme_bw()
+```
+
+1. Is the variance still $\sigma^2 (X'X)^{-1}$?
+2. Is the distribution of $\hat{\beta}$ still normal?
+
+---
+
+Is the variance still $\sigma^2 (X'X)^{-1}$?
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+Is the distribution of $\hat{\beta}$ still normal?
+
+---
+
+```{r echo = FALSE, cache = TRUE}
+n <- 4
+mean <- c(1, -1)
+cov <- matrix(c(1, 0, 0, 1),
+              byrow = TRUE, 
+              ncol = 2)
+X <- cbind(rep(1, n), rmvnorm(n, mean, cov))
+
+x_s <- c(1, 1, 1)
+it <- 5000
+beta <- rep(NA, it)
+E_y <- rep(NA, it)
+y_s <- rep(NA, it)
+for (j in 1:it) {
+  epsilon <- rlaplace(n, m = 0, s = b)
+  y <- X %*% B + epsilon
+  df <- data.frame(y, X)
+  fit <- lm(y ~ X2 + X3, data = df) 
+  beta[j] <- coef(fit)[2] #beta_1
+  E_y[j] <- coef(fit) %*% x_s
+  y_s[j] <- coef(fit) %*% x_s + rlaplace(1, m = 0, s = b)
+}
+```
+
+# $\hat{\beta}$, $n = 4$
+
+```{r echo = FALSE, fig.height = 6, cache = TRUE}
+sigma <- sqrt(2 * b^2)
+var_theory <- sigma^2 * solve(t(X) %*% X) [2, 2]
+
+library(tidyverse)
+ggplot(data.frame(beta), aes(x = beta)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = B1, 
+                            sd = sqrt(var_theory)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+```
+
+---
+# $\hat{\beta}$, $n = 4$, cont.
+
+```{r echo = FALSE, fig.height = 4.6, fig.width = 9}
+p_notnorm_qq <- ggplot(data.frame(beta), aes(sample = beta)) +
+  stat_qq() +
+  stat_qq_line(color = "goldenrod", lwd = 2) +
+  theme_bw()
+
+library(patchwork)
+p_notnorm_qq + p_norm_qq
+```
+
+
+---
+# $\hat{E}(Y | X = x_s)$, $n = 4$
+
+```{r echo = FALSE, fig.height = 6}
+var_theory <- sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s
+
+ggplot(data.frame(E_y), aes(x = E_y)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = x_s %*% B, 
+                            sd = sqrt(var_theory)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+```
+
+
+---
+# $Y | X = x_s$, $n = 4$
+
+```{r echo = FALSE, fig.height = 6}
+var_theory <- sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigma^2
+
+ggplot(data.frame(y_s), aes(x = y_s)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = x_s %*% B, 
+                            sd = sqrt(var_theory)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+```
+
+
+---
+# Distribution of the X
+
+$$X \sim \quad ?$$
+
+*Introduce non-zero covariance into the joint distribution of the $X$ (`rvmnorm()` is helpful here).*
+
+$$X \sim N\left(\mu, \sum \right)$$
+$$\mu = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad \sum = 
+\begin{pmatrix}1 & 0.5 \\ 0.5 & 1 \end{pmatrix}$$
+
+```{r}
+library(mvtnorm)
+mean <- c(1, -1)
+cov <- matrix(c(1, 0, 0, 1),
+              byrow = TRUE, 
+              ncol = 2)
+X <- cbind(1, rmvnorm(n, mean, cov))
+```
+
+*Will this mess up the variances? The distributions?*
+
+---
+# $\hat{\beta}$, $\hat{E}(Y|X = x_s)$, $Y|X = x_s$
+
+```{r echo = FALSE, cache = TRUE, fig.height = 4, fig.width = 10}
+x_s <- c(1, 1, 1)
+it <- 5000
+beta <- rep(NA, it)
+E_y <- rep(NA, it)
+y_s <- rep(NA, it)
+for (j in 1:it) {
+  y <- X %*% B + rnorm(n, mean = 0, sd = sigma)
+  df <- data.frame(y, X)
+  fit <- lm(y ~ X2 + X3, data = df) 
+  beta[j] <- coef(fit)[2] #beta_1
+  E_y[j] <- coef(fit) %*% x_s
+  y_s[j] <- coef(fit) %*% x_s + rnorm(1, mean = 0, sd = sigma(fit))
+}
+
+p1 <- ggplot(data.frame(beta), aes(x = beta)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = B1, 
+                            sd = sqrt(sigma^2 * solve(t(X) %*% X)[2, 2])),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+
+p2 <- ggplot(data.frame(E_y), aes(x = E_y)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = x_s %*% B, 
+                            sd = sqrt(sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+
+p3 <- ggplot(data.frame(y_s), aes(x = y_s)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = x_s %*% B, 
+                            sd = sqrt(sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigma^2)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+
+p1 + p2 + p3
+```
+
+
+---
+# Covariance of the $\epsilon$
+
+$$\epsilon \sim N(0, \sigma^2 I_{n \times n})$$
+
+*Introduce non-zero covariance into the joint distribution of the $\epsilon$.*
+
+$$\epsilon \sim N\left(\mu, \sum_{n \times n} \right)$$
+$$\mu = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad \sum = 
+\begin{pmatrix}1 & 0.5 \\ 0.5 & 1 \end{pmatrix}$$
+
+```{r}
+library(mvtnorm)
+sigsq <- .2
+cov <- .1
+Sigma <- matrix(rep(cov, n^2), ncol = n)
+diag(Sigma) <- sigsq
+rmvnorm(1, mean = rep(0, n), sigma = Sigma)
+```
+
+
+---
+# Covariance of the $\epsilon$
+
+1. What distributions do you expect for the various statistics?
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+2. Do you expect the variances to be accurate? Underestimate? Overestimate?
+
+---
+
+```{r echo = FALSE, cache = TRUE, fig.height=6}
+x_s <- c(1, 1, 1)
+it <- 5000
+beta <- rep(NA, it)
+E_y <- rep(NA, it)
+y_s <- rep(NA, it)
+for (j in 1:it) {
+  y <- X %*% B + c(rmvnorm(1, mean = rep(0, n), sigma = Sigma))
+  df <- data.frame(y, X)
+  fit <- lm(y ~ X2 + X3, data = df) 
+  beta[j] <- coef(fit)[2] #beta_1
+  E_y[j] <- coef(fit) %*% x_s
+  y_s[j] <- coef(fit) %*% x_s + rnorm(1, mean = 0, sd = sigma(fit))
+}
+
+p1 <- ggplot(data.frame(beta), aes(x = beta)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = B1, 
+                            sd = sqrt(sigsq * solve(t(X) %*% X)[2, 2])),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+p1
+```
+
+---
+# $\hat{E}(Y | X= x_s)$
+
+```{r echo = FALSE, fig.height=6}
+p2 <- ggplot(data.frame(E_y), aes(x = E_y)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = x_s %*% B, 
+                            sd = sqrt(sigsq * t(x_s) %*% solve(t(X) %*% X) %*% x_s)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+p2
+```
+
+
+---
+# $Y|X=x_s$
+
+```{r echo = FALSE, fig.height=6}
+p3 <- ggplot(data.frame(y_s), aes(x = y_s)) +
+  geom_histogram(aes(y=..density..), col = "white") +
+  stat_function(fun = dnorm, 
+                args = list(mean = x_s %*% B, 
+                            sd = sqrt(sigsq * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigsq)),
+                color = "goldenrod",
+                lwd = 2) +
+  theme_bw()
+p3
+```
+
+
+---
+# In Review: the Asymptotical Normality of the MLE
+
+*Any MLE, $\hat{\theta}^{MLE}$ will be normally distributed as $n \rightarrow \infty$ with expected value $\theta$ and standard deviation $\frac{1}{\sqrt(nI(\theta))}$.*
+
+
+---
+# Example: $\hat{\beta}^{OLS}$
+
+```{r}
+m1 <- lm(mpg ~ disp + hp + wt, data = mtcars)
+summary(m1)
+```
+
+
+---
+# Example: $\hat{\beta}^{OLS}$, cont.
+
+---
+# Example: $\hat{\beta}^{Log}$
+
+```{r}
+m2 <- glm(factor(am) ~ disp + hp + wt, data = mtcars, family = "binomial")
+summary(m2)
+```
+
+---
+# Example: $\hat{\beta}^{Log}$, cont.

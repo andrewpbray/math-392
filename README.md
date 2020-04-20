@@ -5,6 +5,26 @@ Math 392 | Reed College | Spring 2020
 
 ### Schedule
 
+#### Week 12: Bayesian Modeling
+
+**Monday**
+- [Join class](https://zoom.us/j/232169858)
+- Review
+    - PS 8 and the AR-1 Model
+    - Inference on `lm()` and `glm()`
+
+**Wednesday**
+- [Join class](https://zoom.us/j/232169858)
+- Gibbs Sampling
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+**Friday**
+- [Join class](https://zoom.us/j/232169858)
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+
+* * *
+
 #### Week 11: Generalized Linear Models / Inference on MLEs
 
 **Monday**

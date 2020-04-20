@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>In Review: Inference for Linear Models</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Math 392" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# In Review: Inference for Linear Models
+## Problem Set Debrief
+### Math 392
+
+---
+
+
+
+
+
+# Inference in MLR
+
+### 1. `\(Var(\hat{\beta})\)`
+
+`\begin{align}
+Var(\hat{\beta} | X) &amp;= Var((X'X)^{-1}X'Y | X) \\
+&amp;= (X'X)^{-1}X'Var(Y|X)X(X'X)^{-1} \\
+&amp;= (X'X)^{-1}X'\sigma^2 I X(X'X)^{-1} \\
+&amp;= \sigma^2 (X'X)^{-1}
+\end{align}`
+
+
+---
+# Inference in MLR, cont.
+
+### 2. `\(Var(\hat{E}(Y|X))\)`
+
+`\begin{align}
+Var(\hat{E}(Y|X = x_s)) &amp;= Var(x_s\hat{\beta}) \\
+&amp;= x_s Var(\hat{\beta}) x_s' \\
+&amp;= x_s \sigma^2 (X'X)^{-1} x_s'
+\end{align}`
+
+
+---
+# Inference in MLR, cont.
+
+### 3. `\(Var(Y|X = x_s))\)`
+
+`\begin{align}
+Var(Y|X = x_s) &amp;= Var(x_s\hat{\beta} + \epsilon) \\
+&amp;= Var(x_s\hat{\beta}) + Var(\epsilon) \\
+&amp;= x_s \sigma^2 (X'X)^{-1} x_s' + \sigma^2
+\end{align}`
+
+
+---
+# Marginal distribution of the Error
+
+`$$\epsilon \sim N(0, \sigma^2 I)$$`
+
+
+```r
+epsilon &lt;- rnorm(n, mean = 0, sd = sigma_sq)
+```
+
+*Change the marginal distribution of the `\(\epsilon\)` (though it still should be centered at 0).*
+
+`$$\epsilon \sim Unif(-1, 1)$$`
+
+
+```r
+epsilon &lt;- runif(n, -1, 1)
+```
+
+
+`$$\epsilon \sim Lap(0, b)$$`
+
+
+```r
+library(rmutil)
+epsilon &lt;- rlaplace(n, m = 0, s = b)
+```
+
+
+---
+
+
+
+# `\(\hat{\beta}\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-6-1.png" style="display: block; margin: auto;" /&gt;
+
+1. Is the variance still `\(\sigma^2 (X'X)^{-1}\)`?
+2. Is the distribution of `\(\hat{\beta}\)` still normal?
+
+---
+
+Is the variance still `\(\sigma^2 (X'X)^{-1}\)`?
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+Is the distribution of `\(\hat{\beta}\)` still normal?
+
+---
+
+
+
+# `\(\hat{\beta}\)`, `\(n = 4\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# `\(\hat{\beta}\)`, `\(n = 4\)`, cont.
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# `\(\hat{E}(Y | X = x_s)\)`, `\(n = 4\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-10-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# `\(Y | X = x_s\)`, `\(n = 4\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Distribution of the X
+
+`$$X \sim \quad ?$$`
+
+*Introduce non-zero covariance into the joint distribution of the `\(X\)` (`rvmnorm()` is helpful here).*
+
+`$$X \sim N\left(\mu, \sum \right)$$`
+`$$\mu = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad \sum = 
+\begin{pmatrix}1 &amp; 0.5 \\ 0.5 &amp; 1 \end{pmatrix}$$`
+
+
+```r
+library(mvtnorm)
+mean &lt;- c(1, -1)
+cov &lt;- matrix(c(1, 0, 0, 1),
+              byrow = TRUE, 
+              ncol = 2)
+X &lt;- cbind(1, rmvnorm(n, mean, cov))
+```
+
+*Will this mess up the variances? The distributions?*
+
+---
+# `\(\hat{\beta}\)`, `\(\hat{E}(Y|X = x_s)\)`, `\(Y|X = x_s\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-13-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Covariance of the `\(\epsilon\)`
+
+`$$\epsilon \sim N(0, \sigma^2 I_{n \times n})$$`
+
+*Introduce non-zero covariance into the joint distribution of the `\(\epsilon\)`.*
+
+`$$\epsilon \sim N\left(\mu, \sum_{n \times n} \right)$$`
+`$$\mu = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad \sum = 
+\begin{pmatrix}1 &amp; 0.5 \\ 0.5 &amp; 1 \end{pmatrix}$$`
+
+
+```r
+library(mvtnorm)
+sigsq &lt;- .2
+cov &lt;- .1
+Sigma &lt;- matrix(rep(cov, n^2), ncol = n)
+diag(Sigma) &lt;- sigsq
+rmvnorm(1, mean = rep(0, n), sigma = Sigma)
+```
+
+```
+##            [,1]       [,2]      [,3]       [,4]
+## [1,] -0.3167144 0.02051344 0.2140894 -0.4019925
+```
+
+
+---
+# Covariance of the `\(\epsilon\)`
+
+1. What distributions do you expect for the various statistics?
+
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+&lt;br&gt;
+
+2. Do you expect the variances to be accurate? Underestimate? Overestimate?
+
+---
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# `\(\hat{E}(Y | X= x_s)\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-16-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# `\(Y|X=x_s\)`
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# In Review: the Asymptotical Normality of the MLE
+
+*Any MLE, `\(\hat{\theta}^{MLE}\)` will be normally distributed as `\(n \rightarrow \infty\)` with expected value `\(\theta\)` and standard deviation `\(\frac{1}{\sqrt(nI(\theta))}\)`.*
+
+
+---
+# Example: `\(\hat{\beta}^{OLS}\)`
+
+
+```r
+m1 &lt;- lm(mpg ~ disp + hp + wt, data = mtcars)
+summary(m1)
+```
+
+```
+## 
+## Call:
+## lm(formula = mpg ~ disp + hp + wt, data = mtcars)
+## 
+## Residuals:
+##    Min     1Q Median     3Q    Max 
+## -3.891 -1.640 -0.172  1.061  5.861 
+## 
+## Coefficients:
+##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 37.105505   2.110815  17.579  &lt; 2e-16 ***
+## disp        -0.000937   0.010350  -0.091  0.92851    
+## hp          -0.031157   0.011436  -2.724  0.01097 *  
+## wt          -3.800891   1.066191  -3.565  0.00133 ** 
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## Residual standard error: 2.639 on 28 degrees of freedom
+## Multiple R-squared:  0.8268,	Adjusted R-squared:  0.8083 
+## F-statistic: 44.57 on 3 and 28 DF,  p-value: 8.65e-11
+```
+
+
+---
+# Example: `\(\hat{\beta}^{OLS}\)`, cont.
+
+---
+# Example: `\(\hat{\beta}^{Log}\)`
+
+
+```r
+m2 &lt;- glm(factor(am) ~ disp + hp + wt, data = mtcars, family = "binomial")
+summary(m2)
+```
+
+```
+## 
+## Call:
+## glm(formula = factor(am) ~ disp + hp + wt, family = "binomial", 
+##     data = mtcars)
+## 
+## Deviance Residuals: 
+##     Min       1Q   Median       3Q      Max  
+## -2.2074  -0.1285  -0.0092   0.1346   1.3480  
+## 
+## Coefficients:
+##             Estimate Std. Error z value Pr(&gt;|z|)  
+## (Intercept) 14.37948    7.65348   1.879   0.0603 .
+## disp        -0.02731    0.03922  -0.696   0.4863  
+## hp           0.06105    0.05219   1.170   0.2421  
+## wt          -5.95398    3.23118  -1.843   0.0654 .
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+## 
+## (Dispersion parameter for binomial family taken to be 1)
+## 
+##     Null deviance: 43.2297  on 31  degrees of freedom
+## Residual deviance:  9.1412  on 28  degrees of freedom
+## AIC: 17.141
+## 
+## Number of Fisher Scoring iterations: 8
+```
+
+---
+# Example: `\(\hat{\beta}^{Log}\)`, cont.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
