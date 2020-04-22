@@ -20,7 +20,6 @@ knitr::opts_chunk$set(message = FALSE,
 set.seed(32)
 ```
 
----
 # Mathematical tools
 
 **Chain Rule**
@@ -33,7 +32,7 @@ $$(f(x)g(x))' = f'(x)g(x) + f(x)g'(x)$$
 
 **Taylor Expansion**
 
-$$f(a) + \frac{f'(a)}{1!}(x - a) + \frac{f''(a)}{2!}(x - a)^2 + \ldots$$
+$$f(x) \approx f(a) + \frac{f'(a)}{1!}(x - a) + \frac{f''(a)}{2!}(x - a)^2 + \ldots$$
 
 ---
 # Running example
