@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Gibbs Sampling</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Math 392" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Gibbs Sampling
+## Case Study: The Changepoint Problem
+### Math 392
+
+---
+
+
+
+
+# For later use:
+
+The random variable `\(X\)` is *Poisson* if,
+
+$$
+f(x \,|\, \lambda) = \frac{\lambda^x e^{-\lambda}}{x!} \, ; \quad \quad \lambda &gt; 0, x \in \{0, 1, 2, \ldots \}
+$$
+
+The random variable `\(X\)` is *Gamma* if,
+
+$$
+f(x\,|\,\alpha, \beta) = \frac{\beta^\alpha}{\Gamma(\alpha)}x^{\alpha - 1}e^{-\beta x} \, ; \quad \quad \alpha &gt; 0, \beta &gt; 0, x \in \{0, \infty \}
+$$
+
+where `\(E(X) = \frac{\alpha}{\beta}\)` and `\(Var(X) = \frac{\alpha}{\beta^2}\)`.
+
+
+---
+# Markov Chain Monte Carlo
+
+A collection of algorithms that allow you to take random (Monte Carlo) samples from distributions using a Markov chain.
+
+
+---
+# Gibbs Sampling
+
+Suppose you wish to sample from a joint pdf with density `\(f(x, y)\)`, but are unable to do it directly (there is no `r___()` function). If we can generate from the respective *conditional* distributions, we can set up a Markov chain.
+
+Start with a reasonable `\(Y_0\)`, then:
+
+1. Generate `\(X_{i+1} \sim f_x(X | Y_i)\)`
+2. Generate `\(Y_{i+1} \sim f_y(Y | X_{i+1})\)`
+
+Iterate these steps, and if conditions are met, the stationary distribution will be `\(f(x, y)\)`.
+
+Practical details:
+
+- Use a burn-in period to escape `\(Y_0\)`.
+- Take every tenth sample to diminish Markov dependence.
+
+
+---
+# The Changepoint Problem
+
+Consider a series of Poisson random variables, `\(Y_1, Y_2, \ldots, Y_n\)`. At some unknown point, `\(m\)`, the rate of the Poisson distribution changed. That is,
+
+`\begin{align}
+Y_1, \ldots, Y_m &amp;\sim \textrm{Poi}(\mu) \\
+Y_{m+1}, \ldots, Y_n &amp;\sim \textrm{Poi}(\lambda)
+\end{align}`
+
+
+
+Say: `\(\mu =\)` 2,  `\(\lambda =\)` 4 and `\(m =\)` 38 (at `\(n =\)` 60).
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+**Goal**: Estimate `\(m\)` using data and prior information. 
+
+
+---
+# Plan of Attack
+
+I. Specify prior
+
+II. Write down full joint posterior
+
+III. Write down joint posterior of parameters
+
+IV. Write down conditional posteriors
+
+V. Run Gibbs Sampler to draw from joint posterior then assess convergence and Markov dependence
+
+VI. Formulate conclusions
+
+---
+# I. Specifying Priors
+
+`\begin{align}
+\mu &amp;\sim \textrm{Gamma}(\alpha = 10, \beta = 4) \\
+\lambda &amp;\sim \textrm{Gamma}(\nu = 8, \phi = 2).
+\end{align}`
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-4-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# I. Specifying Priors, cont.
+
+`$$m \sim \textrm{Unif}\{1, 2, \ldots, n - 1\}$$`
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-5-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# II. Full Joint Distribution
+
+If they were all independent:
+
+`$$f(Y_\mu, Y_\lambda, \mu, \lambda, m) = f(Y_\mu)f(Y_\lambda)f(\mu)f(\lambda)f(m)$$`
+
+Correct joint distribution:
+
+`\begin{align}
+ &amp;= f(Y_\mu\,|\,\mu, m)f(Y_\lambda\,|\,\lambda, m)f(\mu)f(\lambda)f(m) \\
+ &amp;= 
+\prod_{i = 1}^{m} \left( \frac{\mu^{Y_i}e^{-\mu}}{Y_i!} \right)
+\prod_{j = m+1}^{n} \left( \frac{\lambda^{Y_j}e^{-\lambda}}{Y_j!} \right)
+\frac{\beta^\alpha}{\Gamma(\alpha)}\mu^{\alpha - 1}e^{-\beta \mu}
+\frac{\phi^\nu}{\Gamma(\nu)}\lambda^{\nu - 1}e^{-\phi \lambda}
+\frac{1}{n - 1}
+\end{align}`
+
+
+---
+# III. Joint Posterior of Parameters
+
+From the definition of conditional probability:
+
+`\begin{align}
+f(\mu, \lambda, m \,|\, Y_\mu, Y_\lambda) &amp;= \frac{f(Y_\mu, Y_\lambda, \mu, \lambda, m)}{f(Y_\mu, Y_\lambda)}
+\end{align}`
+
+We can then pull out the terms, `\(c\)`, that are not a function of the parameters.
+
+`\begin{align}
+&amp;= c \,f(Y_\mu, Y_\lambda, \mu, \lambda, m) \\
+&amp;= c \,\prod_{i = 1}^{m} \left( \frac{\mu^{Y_i}e^{-\mu}}{Y_i!} \right)
+\prod_{j = m+1}^{n} \left( \frac{\lambda^{Y_j}e^{-\lambda}}{Y_j!} \right)
+\frac{\beta^\alpha}{\Gamma(\alpha)}\mu^{\alpha - 1}e^{-\beta \mu}
+\frac{\phi^\nu}{\Gamma(\nu)}\lambda^{\nu - 1}e^{-\phi \lambda} \frac{1}{n - 1} \\
+&amp;= c \,\prod_{i = 1}^{m} \left( \mu^{Y_i}e^{-\mu} \right)
+\prod_{j = m+1}^{n} \left( \lambda^{Y_j}e^{-\lambda} \right)
+\mu^{\alpha - 1}e^{-\beta \mu}
+\lambda^{\nu - 1}e^{-\phi \lambda} \\
+&amp;= c \,  \mu^{\sum_{i=1}^{m}Y_i}e^{-m\mu} 
+\lambda^{\sum_{j=m+1}^{n}Y_j}e^{-(n - m)\lambda}
+\mu^{\alpha - 1}e^{-\beta \mu}
+\lambda^{\nu - 1}e^{-\phi \lambda} \\
+&amp;= c \,  \mu^{\alpha + \sum_{i=1}^{m}Y_i - 1}e^{-(\beta + m) \mu} 
+\lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}
+\end{align}`
+
+
+---
+# IV. Conditional Posterior for `\(m\)`
+
+We again use the definition of conditional probability:
+
+`\begin{align}
+f(m \,|\, \mu, \lambda, Y_\mu, Y_\lambda) &amp;= \frac{f(\mu, \lambda, m \,|\, Y_\mu, Y_\lambda)}{f(\mu, \lambda \,|\, Y_\mu, Y_\lambda)} \\
+&amp;= \frac{c \,  \mu^{\alpha + \sum_{i=1}^{m}Y_i - 1}e^{-(\beta + m) \mu}\lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}}
+{\sum_{k = 1}^{n - 1} c \,  \mu^{\alpha + \sum_{i=1}^{k}Y_i - 1}e^{-(\beta + k) \mu}\lambda^{\nu + \sum_{j=k+1}^{n}Y_j - 1}e^{-(\phi + n - k)\lambda}}
+\end{align}`
+
+Once we cancel out the `\(c\)`, this serves as our discrete posterior distribution on `\(m\)`.
+
+
+---
+# IV. Conditional Posterior for `\(\mu\)`
+
+We start by finding the normalizing constant that we'll use in the denominator, `\(f(\lambda, m \,|\, Y_\mu, Y_\lambda)\)`.
+
+`\begin{align}
+&amp;= \int_0^\infty f(\mu, \lambda, m \,|\, Y_\mu, Y_\lambda) \, \textrm{d}\mu \\
+&amp;= \int_{0}^{\infty}c \,  \mu^{\alpha + \sum_{i=1}^{m}Y_i - 1}e^{-(\beta + m) \mu}\lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda} \,  \mathrm{d} \mu \\
+&amp;= c  \, \lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}
+\int_{0}^{\infty} \mu^{\alpha + \sum_{i=1}^{m}Y_i + 1} e^{-(\beta + m)\mu} \mathrm{d} \mu \\
+&amp;= c  \, \lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}
+\frac{\Gamma(\alpha + \sum_{i=1}^{m}Y_i)}{(\beta + m)^{\alpha + \sum_{i=1}^{m}Y_i}}
+\int_{0}^{\infty} \frac{(\beta + m)^{\alpha + \sum_{i=1}^{m}Y_i}}{\Gamma(\alpha + \sum_{i=1}^{m}Y_i)}
+\mu^{\alpha + \sum_{i=1}^{m}Y_i + 1} e^{-(\beta + m)\mu} \mathrm{d} \mu \\
+&amp;= c  \, \lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}
+\frac{\Gamma(\alpha + \sum_{i=1}^{m}Y_i)}{(\beta + m)^{\alpha + \sum_{i=1}^{m}Y_i}}\\
+\end{align}`
+
+---
+# IV. Conditional Posterior for `\(\mu\)`, cont.
+
+With this normalizing constant in hand, we can write out the form of the posterior for `\(\mu\)`, `\(f(\mu \,|\, \lambda, m, Y_\mu, Y_\lambda)\)`:
+
+`\begin{align}
+&amp;= \frac{f(\mu, \lambda, m, \,|\, Y_\mu, Y_\lambda)}{f(\lambda, m \,|\, Y_\mu, Y_\lambda)} \\
+&amp;= \frac{c \,  \mu^{\alpha + \sum_{i=1}^{m}Y_i - 1}e^{-(\beta + m) \mu}\lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}}{c  \, \lambda^{\nu + \sum_{j=m+1}^{n}Y_j - 1}e^{-(\phi + n - m)\lambda}
+\frac{\Gamma(\alpha + \sum_{i=1}^{m}Y_i)}{(\beta + m)^{\alpha + \sum_{i=1}^{m}Y_i}}} \\
+&amp;= \frac{(\beta + m)^{\alpha + \sum_{i=1}^{m}Y_i}}{\Gamma(\alpha + \sum_{i=1}^{m}Y_i)}
+\mu^{\alpha + \sum_{i=1}^{m}Y_i - 1}e^{-(\beta + m) \mu}
+\end{align}`
+
+Which is recognizable as the pdf of a Gamma random variable. Therefore,
+
+`$$\mu \,|\, m, Y_\mu \sim \textrm{Gamma}(\alpha + \sum_{i=1}^{m}Y_i, \beta + m)$$`
+
+---
+# IV. Posterior for `\(\lambda\)`
+
+Same story as for `\(\mu\)`.
+
+`$$\lambda \,|\, m, Y_\lambda \sim \textrm{Gamma}(\nu + \sum_{i=m+1}^n Y_i, \phi + n - m)$$`
+
+---
+# V. Gibbs Sampler
+
+Form a Markov chain that begins by initializing a value for `\(m_{j-1}\)`, then iterates through the following three steps many times.
+
+1. Sample `\(\mu_j\)` from `\(\textrm{Gamma}(\alpha + \sum_{i=1}^{m_{j-1}}Y_i, \beta + m_{i-j})\)`
+2. Sample `\(\lambda_j\)` from `\(\textrm{Gamma}(\nu + \sum_{i=m_{j-1}+1}^n Y_i, \phi + n - m_{j-1})\)`
+3. Sample `\(m_j\)` from `\(f(m \,|\, \mu_{j}, \lambda_j, Y_{\mu_{j}}, Y_{\lambda_{j}})\)`
+
+Our specific scenario: `\(n = 60\)`, `\(\alpha = 10\)`, `\(\beta = 4\)`, `\(\nu = 8\)`, and `\(\phi = 2\)`.
+
+---
+
+
+```r
+it &lt;- 50000
+post_samples &lt;- matrix(rep(NA, it * 3), ncol = 3)
+colnames(post_samples) &lt;- c("mu", "lambda", "m")
+m_j &lt;- 2 # initialize m
+for (j in 1:it) {
+  # sample mu
+  mu_j      &lt;- rgamma(1, alpha + sum(y[1:m_j]), beta + m_j)
+  # sample lambda
+  lambda_j  &lt;- rgamma(1, nu + sum(y[(m_j+1):n]), phi + (n - m_j))
+  # sample m
+  m_vec &lt;- rep(NA, n - 1)
+  for (k in 1:(n - 1)) {
+    m_vec[k] &lt;-  mu_j^(alpha + sum(y[1:k]) - 1) *
+      exp(-(beta + k) * mu_j) *
+      lambda_j^(nu + sum(y[(k+1):n]) - 1) *
+      exp(-(phi + n - k) * lambda_j)
+  }
+  p &lt;- m_vec/sum(m_vec)
+  m_j &lt;- sample(1:(n - 1), size = 1, prob = p)
+  # store results
+  post_samples[j, "mu"]     &lt;- mu_j
+  post_samples[j, "lambda"] &lt;- lambda_j
+  post_samples[j, "m"]      &lt;- m_j
+}
+```
+
+---
+# V. Convergence
+
+The first 500 `\(m_j\)`:
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-7-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# V. Convergence, cont.
+
+All 50,000:
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-8-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# V. Thinning
+
+To investigate serial correlation, we plot each sampled parameter against its subsequent draw.
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /&gt;
+
+Correlations: 0.196, 0.157, and 0.158.
+
+---
+
+# V. Thinning
+
+We can remove the Markov dependence by retaining only every tenth sample.
+
+
+```r
+df &lt;- df %&gt;%
+  slice(seq(from = 1, to = nrow(df), by = 10))
+```
+
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-11-1.png" style="display: block; margin: auto;" /&gt;
+
+Correlation: 0.002, 0.005, and 0.014.
+
+---
+# VI. Conclusions
+
+What is our updated best guess for when the changepoint occurred? Consider the (thinned) posterior distribution on `\(m\)`.
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /&gt;
+
+Those two prominent modes are at 34 and 37, so those are probably fine point estimates for `\(m\)` based on this data and your prior information.
+
+---
+# VI. Conclusions, cont.
+
+Consider our this final posterior changes if we use a different seed / get a different data set `\(Y\)`.
+
+&lt;img src="week-12-gibbs-changepoint-slides_files/figure-html/unnamed-chunk-13-1.png" style="display: block; margin: auto;" /&gt;
+
+With a flat prior on `\(m\)`, the posterior will be drawing most of its structure from the data, which, at these sample sizes, are still subject to considerable sampling variability.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
