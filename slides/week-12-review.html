@@ -84,7 +84,7 @@ epsilon &lt;- runif(n, -1, 1)
 
 ```r
 library(rmutil)
-epsilon &lt;- rlaplace(n, m = 0, s = b)
+epsilon &lt;- rlaplace(n, m = 0, s = sqrt((1/2) * sigma_sq))
 ```
 
 
@@ -151,12 +151,10 @@ Is the distribution of `\(\hat{\beta}\)` still normal?
 
 
 ```r
-library(mvtnorm)
-mean &lt;- c(1, -1)
-cov &lt;- matrix(c(1, 0, 0, 1),
-              byrow = TRUE, 
-              ncol = 2)
-X &lt;- cbind(1, rmvnorm(n, mean, cov))
+Sigma &lt;- matrix(c(1, 0.5, 0.5, 1),
+                byrow = TRUE, 
+                ncol = 2)
+X &lt;- cbind(1, rmvnorm(n, mu, Sigma))
 ```
 
 *Will this mess up the variances? The distributions?*
@@ -180,17 +178,16 @@ X &lt;- cbind(1, rmvnorm(n, mean, cov))
 
 
 ```r
-library(mvtnorm)
-sigsq &lt;- .2
-cov &lt;- .1
+sigma_sq &lt;- .2
+cov &lt;- .19
 Sigma &lt;- matrix(rep(cov, n^2), ncol = n)
-diag(Sigma) &lt;- sigsq
+diag(Sigma) &lt;- sigma_sq
 rmvnorm(1, mean = rep(0, n), sigma = Sigma)
 ```
 
 ```
-##            [,1]       [,2]      [,3]       [,4]
-## [1,] -0.3167144 0.02051344 0.2140894 -0.4019925
+##            [,1]      [,2]      [,3]      [,4]
+## [1,] 0.05937835 0.1885743 0.1589048 0.1862184
 ```
 
 
@@ -209,6 +206,7 @@ rmvnorm(1, mean = rep(0, n), sigma = Sigma)
 2. Do you expect the variances to be accurate? Underestimate? Overestimate?
 
 ---
+# `\(\hat{\beta}\)`
 
 &lt;img src="week-12-review_files/figure-html/unnamed-chunk-15-1.png" style="display: block; margin: auto;" /&gt;
 
@@ -223,6 +221,35 @@ rmvnorm(1, mean = rep(0, n), sigma = Sigma)
 
 &lt;img src="week-12-review_files/figure-html/unnamed-chunk-17-1.png" style="display: block; margin: auto;" /&gt;
 
+---
+# Visualizing correlated errors
+
+One draw.
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Visualizing correlated errors, cont.
+
+Two draws.
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-19-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Visualizing correlated errors, cont.
+
+Five draws.
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-20-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Estimating $\sigma^2
+
+&lt;img src="week-12-review_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" /&gt;
+
+We will dramatically underestimate `\(\sigma^2\)`, which goes into the SE calculations of all of our statistics.
 
 ---
 # In Review: the Asymptotical Normality of the MLE

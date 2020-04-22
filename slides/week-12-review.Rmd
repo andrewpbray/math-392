@@ -16,7 +16,13 @@ output:
 ```{r include = FALSE}
 knitr::opts_chunk$set(fig.align = "center", 
                       message = FALSE, 
-                      warnings = FALSE)
+                      warning = FALSE)
+
+library(tidyverse)
+library(rmutil)
+library(mvtnorm)
+library(patchwork)
+set.seed(51)
 ```
 
 
@@ -78,57 +84,60 @@ $$\epsilon \sim Lap(0, b)$$
 
 ```{r eval = FALSE}
 library(rmutil)
-epsilon <- rlaplace(n, m = 0, s = b)
+epsilon <- rlaplace(n, m = 0, s = sqrt((1/2) * sigma_sq))
 ```
 
 
 ---
 
-```{r echo = FALSE, cache = TRUE}
-library(rmutil)
-library(mvtnorm)
-set.seed(403)
+```{r echo = FALSE}
 B0 <- 1
 B1 <- 1
 B2 <- 1
 B <- c(B0, B1, B2)
-b <- .25
+sigma_sq <- .2
+b <- sqrt((1/2) * sigma_sq)
 
 n <- 100
-mean <- c(1, -1)
-cov <- matrix(c(1, 0, 0, 1),
+mu <- c(1, -1)
+Sigma <- matrix(c(1, 0, 0, 1),
               byrow = TRUE, 
               ncol = 2)
-X <- cbind(rep(1, n), rmvnorm(n, mean, cov))
+X <- cbind(1, rmvnorm(n, mu, Sigma))
+p <- ncol(X) - 1
 
 x_s <- c(1, 1, 1)
 it <- 5000
 beta <- rep(NA, it)
 E_y <- rep(NA, it)
 y_s <- rep(NA, it)
+
 for (j in 1:it) {
+  # Simulate data
   epsilon <- rlaplace(n, m = 0, s = b)
-  y <- X %*% B + epsilon
-  df <- data.frame(y, X)
-  fit <- lm(y ~ X2 + X3, data = df) 
-  beta[j] <- coef(fit)[2] #beta_1
-  E_y[j] <- coef(fit) %*% x_s
-  y_s[j] <- coef(fit) %*% x_s + rlaplace(1, m = 0, s = b)
+  Y <- X %*% B + epsilon
+  
+  # Calculate estimates
+  B_hat <- solve(t(X) %*% X) %*% t(X) %*% Y
+  residuals <- Y - X %*% B_hat
+  sigma_sq_hat <- sum(residuals^2) / (n - p - 1)
+  beta[j] <- B_hat[2] #beta_1
+  E_y[j] <- x_s %*% B_hat
+  b_hat <- sqrt((1/2) * sigma_sq_hat)
+  y_s[j] <- x_s %*% B_hat + rlaplace(1, m = 0, s = b_hat)
 }
 ```
 
 # $\hat{\beta}$
 
 ```{r echo = FALSE, fig.height = 5}
-sigma <- sqrt(2 * b^2)
-var_theory <- sigma^2 * solve(t(X) %*% X) [2, 2]
+var_theory_B_hat <- sigma_sq * solve(t(X) %*% X) [2, 2]
 
-library(tidyverse)
 ggplot(data.frame(beta), aes(x = beta)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = B1, 
-                            sd = sqrt(var_theory)),
+                            sd = sqrt(var_theory_B_hat)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -157,42 +166,36 @@ Is the distribution of $\hat{\beta}$ still normal?
 
 ---
 
-```{r echo = FALSE, cache = TRUE}
+```{r echo = FALSE, cache = FALSE}
 n <- 4
-mean <- c(1, -1)
-cov <- matrix(c(1, 0, 0, 1),
-              byrow = TRUE, 
-              ncol = 2)
-X <- cbind(rep(1, n), rmvnorm(n, mean, cov))
+X <- X[1:n, ]
 
-x_s <- c(1, 1, 1)
-it <- 5000
-beta <- rep(NA, it)
-E_y <- rep(NA, it)
-y_s <- rep(NA, it)
 for (j in 1:it) {
+  # Simulate data
   epsilon <- rlaplace(n, m = 0, s = b)
-  y <- X %*% B + epsilon
-  df <- data.frame(y, X)
-  fit <- lm(y ~ X2 + X3, data = df) 
-  beta[j] <- coef(fit)[2] #beta_1
-  E_y[j] <- coef(fit) %*% x_s
-  y_s[j] <- coef(fit) %*% x_s + rlaplace(1, m = 0, s = b)
+  Y <- X %*% B + epsilon
+
+  # Calculate estimates
+  B_hat <- solve(t(X) %*% X) %*% t(X) %*% Y
+  residuals <- Y - X %*% B_hat
+  sigma_sq_hat <- sum(residuals^2) / (n - p - 1)
+  beta[j] <- B_hat[2] #beta_1
+  E_y[j] <- x_s %*% B_hat
+  b_hat <- sqrt((1/2) * sigma_sq_hat)
+  y_s[j] <- x_s %*% B_hat + rlaplace(1, m = 0, s = b_hat)
 }
 ```
 
 # $\hat{\beta}$, $n = 4$
 
-```{r echo = FALSE, fig.height = 6, cache = TRUE}
-sigma <- sqrt(2 * b^2)
-var_theory <- sigma^2 * solve(t(X) %*% X) [2, 2]
+```{r echo = FALSE, fig.height = 6, cache = FALSE}
+var_theory_B_hat <- sigma_sq * solve(t(X) %*% X) [2, 2]
 
-library(tidyverse)
 ggplot(data.frame(beta), aes(x = beta)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = B1, 
-                            sd = sqrt(var_theory)),
+                            sd = sqrt(var_theory_B_hat)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -207,7 +210,6 @@ p_notnorm_qq <- ggplot(data.frame(beta), aes(sample = beta)) +
   stat_qq_line(color = "goldenrod", lwd = 2) +
   theme_bw()
 
-library(patchwork)
 p_notnorm_qq + p_norm_qq
 ```
 
@@ -216,13 +218,13 @@ p_notnorm_qq + p_norm_qq
 # $\hat{E}(Y | X = x_s)$, $n = 4$
 
 ```{r echo = FALSE, fig.height = 6}
-var_theory <- sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s
+var_theory_E_y <- sigma_sq * t(x_s) %*% solve(t(X) %*% X) %*% x_s
 
 ggplot(data.frame(E_y), aes(x = E_y)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = x_s %*% B, 
-                            sd = sqrt(var_theory)),
+                            sd = sqrt(var_theory_E_y)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -233,13 +235,13 @@ ggplot(data.frame(E_y), aes(x = E_y)) +
 # $Y | X = x_s$, $n = 4$
 
 ```{r echo = FALSE, fig.height = 6}
-var_theory <- sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigma^2
+var_theory_y_s <- sigma_sq * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigma_sq
 
 ggplot(data.frame(y_s), aes(x = y_s)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = x_s %*% B, 
-                            sd = sqrt(var_theory)),
+                            sd = sqrt(var_theory_y_s)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -258,12 +260,10 @@ $$\mu = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad \sum =
 \begin{pmatrix}1 & 0.5 \\ 0.5 & 1 \end{pmatrix}$$
 
 ```{r}
-library(mvtnorm)
-mean <- c(1, -1)
-cov <- matrix(c(1, 0, 0, 1),
-              byrow = TRUE, 
-              ncol = 2)
-X <- cbind(1, rmvnorm(n, mean, cov))
+Sigma <- matrix(c(1, 0.5, 0.5, 1),
+                byrow = TRUE, 
+                ncol = 2)
+X <- cbind(1, rmvnorm(n, mu, Sigma))
 ```
 
 *Will this mess up the variances? The distributions?*
@@ -271,26 +271,30 @@ X <- cbind(1, rmvnorm(n, mean, cov))
 ---
 # $\hat{\beta}$, $\hat{E}(Y|X = x_s)$, $Y|X = x_s$
 
-```{r echo = FALSE, cache = TRUE, fig.height = 4, fig.width = 10}
-x_s <- c(1, 1, 1)
-it <- 5000
-beta <- rep(NA, it)
-E_y <- rep(NA, it)
-y_s <- rep(NA, it)
+```{r echo = FALSE, cache = FALSE, fig.height = 4, fig.width = 10}
 for (j in 1:it) {
-  y <- X %*% B + rnorm(n, mean = 0, sd = sigma)
-  df <- data.frame(y, X)
-  fit <- lm(y ~ X2 + X3, data = df) 
-  beta[j] <- coef(fit)[2] #beta_1
-  E_y[j] <- coef(fit) %*% x_s
-  y_s[j] <- coef(fit) %*% x_s + rnorm(1, mean = 0, sd = sigma(fit))
+  # Simulate data
+  epsilon <- rnorm(n, mean = 0, sd = sqrt(sigma_sq))
+  Y <- X %*% B + epsilon
+
+  # Calculate estimates
+  B_hat <- solve(t(X) %*% X) %*% t(X) %*% Y
+  residuals <- Y - X %*% B_hat
+  sigma_sq_hat <- sum(residuals^2) / (n - p - 1)
+  beta[j] <- B_hat[2] #beta_1
+  E_y[j] <- x_s %*% B_hat
+  y_s[j] <- x_s %*% B_hat + rnorm(1, mean = 0, sd = sqrt(sigma_sq_hat))
 }
+
+var_theory_B_hat <- sigma_sq * solve(t(X) %*% X) [2, 2]
+var_theory_E_y <- sigma_sq * t(x_s) %*% solve(t(X) %*% X) %*% x_s
+var_theory_y_s <- sigma_sq * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigma_sq
 
 p1 <- ggplot(data.frame(beta), aes(x = beta)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = B1, 
-                            sd = sqrt(sigma^2 * solve(t(X) %*% X)[2, 2])),
+                            sd = sqrt(var_theory_B_hat)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -299,7 +303,7 @@ p2 <- ggplot(data.frame(E_y), aes(x = E_y)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = x_s %*% B, 
-                            sd = sqrt(sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s)),
+                            sd = sqrt(var_theory_E_y)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -308,7 +312,7 @@ p3 <- ggplot(data.frame(y_s), aes(x = y_s)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = x_s %*% B, 
-                            sd = sqrt(sigma^2 * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigma^2)),
+                            sd = sqrt(var_theory_y_s)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -329,11 +333,10 @@ $$\mu = \begin{pmatrix} -1 \\ 1 \end{pmatrix}, \quad \sum =
 \begin{pmatrix}1 & 0.5 \\ 0.5 & 1 \end{pmatrix}$$
 
 ```{r}
-library(mvtnorm)
-sigsq <- .2
-cov <- .1
+sigma_sq <- .2
+cov <- .19
 Sigma <- matrix(rep(cov, n^2), ncol = n)
-diag(Sigma) <- sigsq
+diag(Sigma) <- sigma_sq
 rmvnorm(1, mean = rep(0, n), sigma = Sigma)
 ```
 
@@ -353,27 +356,30 @@ rmvnorm(1, mean = rep(0, n), sigma = Sigma)
 2. Do you expect the variances to be accurate? Underestimate? Overestimate?
 
 ---
+# $\hat{\beta}$
 
-```{r echo = FALSE, cache = TRUE, fig.height=6}
-x_s <- c(1, 1, 1)
-it <- 5000
-beta <- rep(NA, it)
-E_y <- rep(NA, it)
-y_s <- rep(NA, it)
+```{r echo = FALSE, cache = FALSE, fig.height=6}
+sigma_sq_hats <- rep(NA, it)
 for (j in 1:it) {
-  y <- X %*% B + c(rmvnorm(1, mean = rep(0, n), sigma = Sigma))
-  df <- data.frame(y, X)
-  fit <- lm(y ~ X2 + X3, data = df) 
-  beta[j] <- coef(fit)[2] #beta_1
-  E_y[j] <- coef(fit) %*% x_s
-  y_s[j] <- coef(fit) %*% x_s + rnorm(1, mean = 0, sd = sigma(fit))
+  # Simulate data
+  epsilon <- c(rmvnorm(1, mean = rep(0, n), sigma = Sigma))
+  Y <- X %*% B + epsilon
+
+  # Calculate estimates
+  B_hat <- solve(t(X) %*% X) %*% t(X) %*% Y
+  residuals <- Y - X %*% B_hat
+  sigma_sq_hat <- sum(residuals^2) / (n - p - 1)
+  beta[j] <- B_hat[2] #beta_1
+  E_y[j] <- x_s %*% B_hat
+  y_s[j] <- x_s %*% B_hat + rnorm(1, mean = 0, sd = sqrt(sigma_sq_hat))
+  sigma_sq_hats[j] <- sigma_sq_hat
 }
 
 p1 <- ggplot(data.frame(beta), aes(x = beta)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = B1, 
-                            sd = sqrt(sigsq * solve(t(X) %*% X)[2, 2])),
+                            sd = sqrt(var_theory_B_hat)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -388,7 +394,7 @@ p2 <- ggplot(data.frame(E_y), aes(x = E_y)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = x_s %*% B, 
-                            sd = sqrt(sigsq * t(x_s) %*% solve(t(X) %*% X) %*% x_s)),
+                            sd = sqrt(var_theory_E_y)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
@@ -404,13 +410,104 @@ p3 <- ggplot(data.frame(y_s), aes(x = y_s)) +
   geom_histogram(aes(y=..density..), col = "white") +
   stat_function(fun = dnorm, 
                 args = list(mean = x_s %*% B, 
-                            sd = sqrt(sigsq * t(x_s) %*% solve(t(X) %*% X) %*% x_s + sigsq)),
+                            sd = sqrt(var_theory_y_s)),
                 color = "goldenrod",
                 lwd = 2) +
   theme_bw()
 p3
 ```
 
+---
+# Visualizing correlated errors
+
+One draw.
+
+```{r echo = FALSE, fig.height = 6}
+X <- X[, 1:2]
+B <- B[1:2]
+Y <- rep(NA, 5 * 4)
+
+for (j in 1:5) {
+  epsilon <- c(rmvnorm(1, mean = rep(0, n), sigma = Sigma))
+  Y[1:n + n * (j - 1)] <- X %*% B + epsilon
+}
+
+tibble(Y = Y,
+       X = rep(X[, 2], 5),
+       draw = factor(rep(1:5, each = n))) %>%
+  filter(draw == 1) %>%
+  ggplot(aes(x = X, y = Y, col = draw)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE, lty = 2) +
+  geom_abline(slope = 1, intercept = 1, color = "goldenrod", lwd = 2) +
+  geom_vline(xintercept = X[1, 2], col = "darkgray") +
+  geom_vline(xintercept = X[2, 2], col = "darkgray") +
+  geom_vline(xintercept = X[3, 2], col = "darkgray") +
+  geom_vline(xintercept = X[4, 2], col = "darkgray") +
+  theme_bw() +
+  lims(x = range(X[,2]),
+       y = range(Y) + c(-.2, .2))
+```
+
+
+---
+# Visualizing correlated errors, cont.
+
+Two draws.
+
+```{r echo = FALSE, fig.height = 6}
+tibble(Y = Y,
+       X = rep(X[, 2], 5),
+       draw = factor(rep(1:5, each = n))) %>%
+  filter(draw %in% 1:2) %>%
+  ggplot(aes(x = X, y = Y, col = draw)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE, lty = 2) +
+  geom_abline(slope = 1, intercept = 1, color = "goldenrod", lwd = 2) +
+  geom_vline(xintercept = X[1, 2], col = "darkgray") +
+  geom_vline(xintercept = X[2, 2], col = "darkgray") +
+  geom_vline(xintercept = X[3, 2], col = "darkgray") +
+  geom_vline(xintercept = X[4, 2], col = "darkgray") +
+  theme_bw() +
+  lims(x = range(X[,2]),
+       y = range(Y) + c(-.2, .2))
+```
+
+---
+# Visualizing correlated errors, cont.
+
+Five draws.
+
+```{r echo = FALSE, fig.height = 6}
+tibble(Y = Y,
+       X = rep(X[, 2], 5),
+       draw = factor(rep(1:5, each = n))) %>%
+  ggplot(aes(x = X, y = Y, col = draw)) +
+  geom_point(size = 3) +
+  geom_smooth(method = "lm", se = FALSE, lty = 2) +
+  geom_abline(slope = 1, intercept = 1, color = "goldenrod", lwd = 2) +
+  geom_vline(xintercept = X[1, 2], col = "darkgray") +
+  geom_vline(xintercept = X[2, 2], col = "darkgray") +
+  geom_vline(xintercept = X[3, 2], col = "darkgray") +
+  geom_vline(xintercept = X[4, 2], col = "darkgray") +
+  theme_bw() +
+  lims(x = range(X[,2]),
+       y = range(Y) + c(-.2, .2))
+```
+
+
+---
+# Estimating $\sigma^2
+
+```{r echo = FALSE, fig.height = 5, fig.width = 8}
+ggplot(data.frame(s2 = sigma_sq_hats), aes(x = s2)) +
+  geom_histogram(col = "white") +
+  geom_vline(xintercept = sigma_sq, color = "goldenrod", lwd = 2) +
+  xlim(c(-.01, .21)) +
+  theme_bw()
+```
+
+We will dramatically underestimate $\sigma^2$, which goes into the SE calculations of all of our statistics.
 
 ---
 # In Review: the Asymptotical Normality of the MLE
