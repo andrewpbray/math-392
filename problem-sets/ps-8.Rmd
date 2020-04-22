@@ -48,7 +48,9 @@ y <- ___
 
 ### Part I. Sampling distributions
 
-Use your simulator to create an MC approximation of the true sampling distribution of the estimates of $\beta_1$, $E(Y_s)$, and $Y_s$ corresponding to a fixed new observation $x_s$. How do these empirical distributions compare to their analytical form in terms of center, shape, and spread?
+Use your simulator to create an MC approximation of the true sampling distribution of the estimates of $\beta_1$, $E(Y | X = x_s)$, and $Y | X = x_s$ corresponding to a fixed new observation $x_s$. All three of these estimates should be pure *estimates*, that is: functions of the simulated data and *not* involving any of the parameters that you set to govern the simulation. In studying these estimates, you're mirroring the process of analyzing a data, except the simulation gives you access to as many such data sets as you like. Note that the common estimator for $\sigma^2$
+
+How do these empirical distributions compare to their analytical form in terms of center, shape, and variance?
 
 ### Part II. A different model
 
