@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+  <head>
+    <title>Bayesian Regression and the Metropolis Algorithm</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="Math 392" />
+    <link href="libs/remark-css-0.0.1/fc.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/fc-fonts.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link rel="stylesheet" href="reed.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Bayesian Regression and the Metropolis Algorithm
+### Math 392
+
+---
+
+
+
+
+# Simple Linear Regression with Gaussian Errors
+
+Let `\(Y\)` be a r.v., `\(X\)` be fixed, and `\(\theta = \{\beta_0, \beta_1, \sigma^2 \}\)` are parameters.
+
+`$$Y|X, \theta \sim N(\beta_0 + \beta_1 x, \sigma^2)$$`
+
+## Frequentists ask
+
+What sort of `\(\hat{\theta}\)` would we get under hypothetical resampling?
+
+## Bayesians ask
+
+What is our sum knowledge of `\(\theta\)` based on the data and prior information?
+
+
+---
+# Prior Considerations
+
+- What is the support of `\(\theta\)`?
+- Flat or mounded?
+- Conjugate?
+   - `\(\sigma^2 \sim InvChisq()\)`
+   - `\(\beta | \sigma^2 \sim N()\)`
+- Correlated?
+
+Let's use:
+
+`\begin{align}
+\beta_0 &amp;\sim Unif(-10, 10) \\
+\beta_1 &amp;\sim Normal(\mu = 0, \tau^2 = 25) \\
+\sigma^2 &amp;\sim Unif(0, 10)
+\end{align}`
+
+## Your turn
+
+Please write out the expression for the full joint distribution.
+
+
+---
+# Calculating the Posterior
+
+## Full Joint
+
+`\begin{align}
+f(Y, \beta_0, \beta_1, \sigma^2) &amp;= f(Y|\beta_0, \beta_1, \sigma^2)f(\beta_0)f(\beta_1)f(\sigma^2) \\
+&amp;= \left[ \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi \sigma^2}}e^{\frac{1}{2\sigma} (Y_i - \beta_0 - \beta_1 x)^2} \right] \left[ \frac{1}{20} \right] \left[ \frac{1}{\sqrt{2\pi \tau^2}}e^{\frac{1}{2\sigma} (\beta_1)^2} \right] \left[ \frac{1}{10}\right]
+\end{align}`
+
+## Full Conditional
+
+`$$f(\beta_0, \beta_1, \sigma^2 | Y) = cf(Y, \beta_0, \beta_1, \sigma^2)$$`
+
+---
+# Metropolis Algorithm
+
+Let `\(f(\theta)\)` be a target density that you wish to sample from. Let `\(J(\theta | \theta_i, \tau^2)\)` be a jumping distribution that is symmetric: `\(J(\theta_a | \theta_b) = J(\theta_b|\theta_a)\)`.
+
+1. Select an initial value `\(\theta_0\)` s.t. `\(f(\theta_0) &gt; 0\)`
+2. For `\(i = 1, 2, \ldots\)`  
+  a) Sample a *proposal* `\(\theta_*\)` from `\(J(\theta_* | \theta_{i-1})\)`  
+  b) Calculate the ratio of densities  
+  `$$r = \frac{f(\theta_*)}{f(\theta_{i-1})}$$`
+3. Set:
+`$$\theta_i = 
+\begin{cases} 
+\theta_* &amp; \text{with probability } min(r, 1) \\
+\theta_{i-1}  &amp; \text{otherwise}
+\end{cases}$$`
+
+
+---
+# Example: Sampling from the Gamma
+
+`$$\theta \sim Gamma(\alpha = 2, \beta = 3)$$`
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-2-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Proposal Distribution
+
+`$$J(\theta | \theta_i, \tau^2) \sim N(\theta_0, \tau^2 = 3^2)$$`
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-3-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Metropolis Algorithm
+
+1. Select an initial value `\(\theta_0\)` s.t. `\(f(\theta_0) &gt; 0\)`
+2. For `\(i = 1, 2, \ldots\)`  
+  a) Sample a *proposal* `\(\theta_*\)` from `\(J(\theta_* | \theta_{i-1})\)`  
+  b) Calculate the ratio of densities  
+  `$$r = \frac{f(\theta_*)}{f(\theta_{i-1})}$$`
+3. Set:
+`$$\theta_i = 
+\begin{cases} 
+\theta_* &amp; \text{with probability } min(r, 1) \\
+\theta_{i-1}  &amp; \text{otherwise}
+\end{cases}$$`
+
+
+---
+# Initialize `\(\theta_0\)`
+
+
+```r
+theta_0 &lt;- 1.2
+```
+
+
+
+
+---
+# A modest proposal
+
+
+
+
+```r
+theta_star &lt;- rnorm(1, theta_0, .3)
+```
+
+
+```
+## [1] 1.477938
+```
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-9-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Calculate the ratio
+
+
+```r
+r &lt;- dgamma(theta_star, 2, 3)/dgamma(theta_0, 2, 3)
+```
+
+
+```
+## [1] 0.5350007
+```
+
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-12-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Accept?
+
+
+```r
+runif(1) &lt; min(r, 1)
+```
+
+```
+## [1] FALSE
+```
+
+So we set the new center of the jumping distribution to the previous value:
+
+
+```r
+theta_1 &lt;- theta_0
+```
+
+
+---
+# A second proposal
+
+
+
+
+```r
+theta_star &lt;- rnorm(1, theta_1, .3)
+```
+
+
+```
+## [1] 1.076791
+```
+
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-18-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Calculate the ratio
+
+
+```r
+r &lt;- dgamma(theta_star, 2, 3)/dgamma(theta_1, 2, 3)
+```
+
+
+```
+## [1] 1.298604
+```
+
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-21-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Accept?
+
+
+```r
+runif(1) &lt; min(r, 1)
+```
+
+```
+## [1] TRUE
+```
+
+So we set the new center of the jumping distribution to the proposed value:
+
+
+```r
+theta_2 &lt;- theta_star 
+```
+
+---
+# A third proposal
+
+
+
+
+```r
+theta_star &lt;- rnorm(1, theta_2, .3)
+```
+
+
+```
+## [1] 0.9535826
+```
+
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-27-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Calculate the ratio
+
+
+```r
+r &lt;- dgamma(theta_star, 2, 3)/dgamma(theta_2, 2, 3)
+```
+
+
+```
+## [1] 1.281603
+```
+
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-30-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Accept?
+
+
+```r
+runif(1) &lt; min(r, 1)
+```
+
+```
+## [1] TRUE
+```
+
+
+---
+# Iterated algorithm
+
+
+```r
+theta_0 &lt;- 1.2
+tau &lt;- .3
+it &lt;- 50000
+chain &lt;- rep(NA, it + 1)
+chain[1] &lt;- theta_0
+for (i in 1:it) {
+  proposal &lt;- rnorm(1, chain[i], tau)
+  p_move &lt;- min(dgamma(proposal, 2, 3)/
+                  dgamma(chain[i], 2, 3),
+                1)
+  chain[i + 1] &lt;- ifelse(runif(1) &lt; p_move,
+                         proposal,
+                         chain[i])
+}
+head(chain)
+```
+
+```
+## [1] 1.2000000 0.9841212 0.9841212 1.0130421 1.0364991 0.6582159
+```
+
+
+---
+# The burn-in period
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-33-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Thinning
+
+There is strong auto-correlation, so we decimate.
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-34-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Distribution of samples
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-35-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Acceptance rate
+
+
+```r
+(acceptance &lt;- 1 - mean(duplicated(chain[-(1:burn_in)])))
+```
+
+```
+## [1] 0.7503833
+```
+
+- Recommended acceptance rate is 30%-40% - why?
+- How can we adjust the acceptance rate?
+
+
+---
+# High variance jump
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-37-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# New MC chain
+
+
+```r
+theta_0 &lt;- 1.2
+tau &lt;- 1
+it &lt;- 50000
+chain &lt;- rep(NA, it + 1)
+chain[1] &lt;- theta_0
+for (i in 1:it) {
+  proposal &lt;- rnorm(1, chain[i], tau)
+  p_move &lt;- min(dgamma(proposal, 2, 3)/
+                  dgamma(chain[i], 2, 3),
+                1)
+  chain[i + 1] &lt;- ifelse(runif(1) &lt; p_move,
+                         proposal,
+                         chain[i])
+}
+head(chain)
+```
+
+```
+## [1] 1.200000 1.636454 1.636454 1.636454 1.014004 1.014004
+```
+
+---
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-39-1.png" style="display: block; margin: auto;" /&gt;
+
+
+```r
+(acceptance &lt;- 1 - mean(duplicated(chain[-(1:burn_in)])))
+```
+
+```
+## [1] 0.4101242
+```
+
+
+---
+# Low variance jump
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-41-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+
+
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-43-1.png" style="display: block; margin: auto;" /&gt;
+
+
+```r
+(acceptance &lt;- 1 - mean(duplicated(chain[-(1:burn_in)])))
+```
+
+```
+## [1] 0.9082184
+```
+
+---
+# Bayesian Regression
+
+Begin by generating data.
+
+
+```r
+set.seed(79)
+B0 &lt;- 0
+B1 &lt;- 5
+sigma &lt;- 10
+n &lt;- 31
+x &lt;- (-(n-1)/2):((n-1)/2)
+y &lt;-  B0 + B1 * x + rnorm(n, mean = 0, sd = sigma)
+```
+
+---
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-46-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# The Likelihood
+
+
+```r
+likelihood &lt;- function(theta) {
+    B0 &lt;- theta[1]
+    B1 &lt;- theta[2]
+    sigma &lt;- theta[3]
+    y_fit &lt;- B0 + B1 * x
+    logLik_vec &lt;- dnorm(y, 
+                        mean = y_fit, 
+                        sd = sigma, 
+                        log = T)
+    sum(logLik_vec)
+}
+```
+
+
+---
+# The Prior
+
+
+```r
+prior &lt;- function(theta) {
+    B0 &lt;- theta[1]
+    B1 &lt;- theta[2]
+    sigma &lt;- theta[3]
+    B0_prior &lt;- dnorm(B0, sd = 5, log = T)
+    B1_prior &lt;- dunif(B1, min = 0, max = 10, log = T)
+    sigma_prior &lt;- dunif(sigma, min = 0, max = 30, log = T)
+    B0_prior + B1_prior + sigma_prior
+}
+```
+
+
+---
+# The Posterior
+
+
+```r
+posterior &lt;- function(theta) {
+   likelihood(theta) + prior(theta)
+}
+```
+
+Why are we using logs of everything? Why don't we care about the constant of proportionality?
+
+---
+
+
+---
+# Metropolis Algorithm
+
+
+```r
+it &lt;- 50000
+chain &lt;- matrix(rep(NA, (it + 1) * 3), ncol = 3)
+theta_0 &lt;- c(0, 4, 10)
+chain[1, ] &lt;- theta_0
+for (i in 1:it){
+  proposal &lt;- rnorm(3, mean = chain[i, ], 
+                    sd = c(0.5,0.1,0.3))
+  p_move &lt;- exp(posterior(proposal) - posterior(chain[i, ]))
+  if (runif(1) &lt; p_move) {
+    chain[i + 1, ] &lt;- proposal
+  } else {
+    chain[i + 1, ] &lt;- chain[i, ]
+  }
+}
+head(chain)
+```
+
+```
+##            [,1]     [,2]      [,3]
+## [1,]  0.0000000 4.000000 10.000000
+## [2,] -0.1481424 4.173897 10.086451
+## [3,] -0.4571575 4.057407  9.837978
+## [4,] -0.1109865 4.109123 10.150943
+## [5,] -0.2945380 4.075292 10.446455
+## [6,] -0.3760824 4.102969 10.439077
+```
+ 
+
+---
+# Trace chain 
+ 
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-51-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# Sigma vs Betas
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-52-1.png" style="display: block; margin: auto;" /&gt;
+
+
+---
+# From Prior to Posterior
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-53-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Bayesian Point Estimates
+
+There are several options for turning the posterior distribution of the parameters into point estimates of the coefficients. We'll use the mean.
+
+
+```r
+(B0_bayes &lt;- mean(chain$B0))
+```
+
+```
+## [1] -2.423809
+```
+
+```r
+(B1_bayes &lt;- mean(chain$B1))
+```
+
+```
+## [1] 5.028589
+```
+
+```r
+(sigma_bayes &lt;- mean(chain$sigma))
+```
+
+```
+## [1] 11.68731
+```
+
+---
+
+We can compare those to the maximum likelihood / least squares estimates.
+
+
+```r
+df &lt;- data.frame(x, y)
+m1 &lt;- lm(y ~ x, df)
+coef(m1)
+```
+
+```
+## (Intercept)           x 
+##   -2.749816    5.028168
+```
+
+---
+# Two approaches
+
+&lt;img src="week-12-bayesian-regression-metropolis_files/figure-html/unnamed-chunk-56-1.png" style="display: block; margin: auto;" /&gt;
+
+---
+# Intervals on `\(\beta_1\)`
+
+### Confidence Interval
+
+
+```r
+confint(m1, parm = 2)
+```
+
+```
+##      2.5 %   97.5 %
+## x 4.559266 5.497069
+```
+
+### Credible Interval
+
+
+```r
+quantile(chain$B1, c(.025, .975))
+```
+
+```
+##     2.5%    97.5% 
+## 4.554244 5.491358
+```
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "atelier-forest-light",
+"highlightLines": true,
+"highlightSpans": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();</script>
+
+<script>
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>

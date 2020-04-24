@@ -1,0 +1,886 @@
+---
+title: "Bayesian Regression and the Metropolis Algorithm"
+author: "Math 392"
+header-includes:
+   - \usepackage{amsmath}
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(message = FALSE,
+                      warning = FALSE,
+                      fig.align = "center",
+                      fig.height = 5.4)
+library(tidyverse)
+library(patchwork)
+
+# set plot aesthetics
+library(wesanderson)
+pal <- wes_palette("Royal1")
+col_target <- "darkgray"
+lwd_target <- 1.5
+lty_target <- 1
+col_proposal <- "darkgray"
+lwd_proposal <- 1.1
+lty_proposal <- 2
+col_theta <- "steelblue"
+lwd_theta <- 1.1
+lty_theta <- 3
+col_theta_star <- "orchid"
+lwd_theta_star <- 1.1
+lty_theta_star <- 3
+```
+
+# Simple Linear Regression with Gaussian Errors
+
+Let $Y$ be a r.v., $X$ be fixed, and $\theta = \{\beta_0, \beta_1, \sigma^2 \}$ are parameters.
+
+$$Y|X, \theta \sim N(\beta_0 + \beta_1 x, \sigma^2)$$
+
+## Frequentists ask
+
+What sort of $\hat{\theta}$ would we get under hypothetical resampling?
+
+## Bayesians ask
+
+What is our sum knowledge of $\theta$ based on the data and prior information?
+
+
+---
+# Prior Considerations
+
+- What is the support of $\theta$?
+- Flat or mounded?
+- Conjugate?
+   - $\sigma^2 \sim InvChisq()$
+   - $\beta | \sigma^2 \sim N()$
+- Correlated?
+
+Let's use:
+
+\begin{align}
+\beta_0 &\sim Unif(-10, 10) \\
+\beta_1 &\sim Normal(\mu = 0, \tau^2 = 25) \\
+\sigma^2 &\sim Unif(0, 10)
+\end{align}
+
+## Your turn
+
+Please write out the expression for the full joint distribution.
+
+
+---
+# Calculating the Posterior
+
+## Full Joint
+
+\begin{align}
+f(Y, \beta_0, \beta_1, \sigma^2) &= f(Y|\beta_0, \beta_1, \sigma^2)f(\beta_0)f(\beta_1)f(\sigma^2) \\
+&= \left[ \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi \sigma^2}}e^{\frac{1}{2\sigma} (Y_i - \beta_0 - \beta_1 x)^2} \right] \left[ \frac{1}{20} \right] \left[ \frac{1}{\sqrt{2\pi \tau^2}}e^{\frac{1}{2\sigma} (\beta_1)^2} \right] \left[ \frac{1}{10}\right]
+\end{align}
+
+## Full Conditional
+
+$$f(\beta_0, \beta_1, \sigma^2 | Y) = cf(Y, \beta_0, \beta_1, \sigma^2)$$
+
+---
+# Metropolis Algorithm
+
+Let $f(\theta)$ be a target density that you wish to sample from. Let $J(\theta | \theta_i, \tau^2)$ be a jumping distribution that is symmetric: $J(\theta_a | \theta_b) = J(\theta_b|\theta_a)$.
+
+1. Select an initial value $\theta_0$ s.t. $f(\theta_0) > 0$
+2. For $i = 1, 2, \ldots$  
+  a) Sample a *proposal* $\theta_*$ from $J(\theta_* | \theta_{i-1})$  
+  b) Calculate the ratio of densities  
+  $$r = \frac{f(\theta_*)}{f(\theta_{i-1})}$$
+3. Set:
+$$\theta_i = 
+\begin{cases} 
+\theta_* & \text{with probability } min(r, 1) \\
+\theta_{i-1}  & \text{otherwise}
+\end{cases}$$
+
+
+---
+# Example: Sampling from the Gamma
+
+$$\theta \sim Gamma(\alpha = 2, \beta = 3)$$
+
+```{r echo = FALSE}
+p1 <- ggplot(data.frame(x = c(0, 4)), aes(x = x)) +
+  stat_function(fun = dgamma, 
+                args = list(2, 3),
+                col = col_target,
+                lwd = lwd_target,
+                lty = lty_target,
+                n = 300) +
+  geom_area(stat = "function",
+            fun = dgamma,
+            args = list(2, 3),
+            fill = col_target,
+            lwd = 1.5,
+            alpha = .5) +
+  ylim(c(0, 1.4)) +
+  theme_bw() +
+  labs(x = expression(theta),
+       y = "") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+p1
+```
+
+
+---
+# Proposal Distribution
+
+$$J(\theta | \theta_i, \tau^2) \sim N(\theta_0, \tau^2 = 3^2)$$
+
+```{r echo = FALSE}
+theta_0 <- 1.2
+p2 <- p1 +
+  stat_function(fun = dnorm,
+                args = list(theta_0, .3), 
+                col = col_proposal, 
+                lwd = lwd_proposal,
+                lty = lty_proposal,
+                n = 300)
+p2
+```
+
+
+---
+# Metropolis Algorithm
+
+1. Select an initial value $\theta_0$ s.t. $f(\theta_0) > 0$
+2. For $i = 1, 2, \ldots$  
+  a) Sample a *proposal* $\theta_*$ from $J(\theta_* | \theta_{i-1})$  
+  b) Calculate the ratio of densities  
+  $$r = \frac{f(\theta_*)}{f(\theta_{i-1})}$$
+3. Set:
+$$\theta_i = 
+\begin{cases} 
+\theta_* & \text{with probability } min(r, 1) \\
+\theta_{i-1}  & \text{otherwise}
+\end{cases}$$
+
+
+---
+# Initialize $\theta_0$
+
+```{r}
+theta_0 <- 1.2
+```
+
+```{r echo = FALSE}
+p3 <- p2 +
+  geom_vline(xintercept = theta_0,
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta)
+```
+
+
+---
+# A modest proposal
+
+```{r echo = FALSE}
+set.seed(18)
+```
+
+```{r eval = FALSE}
+theta_star <- rnorm(1, theta_0, .3)
+```
+
+```{r echo = FALSE}
+theta_star <- rnorm(1, theta_0, .3)
+theta_star
+```
+
+```{r echo = FALSE}
+p4 <- p3 +
+  geom_vline(xintercept = theta_star, 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star)
+p4
+```
+
+
+---
+# Calculate the ratio
+
+```{r eval = FALSE}
+r <- dgamma(theta_star, 2, 3)/dgamma(theta_0, 2, 3)
+```
+
+```{r echo = FALSE}
+r <- dgamma(theta_star, 2, 3)/dgamma(theta_0, 2, 3)
+r
+```
+
+
+```{r echo = FALSE}
+p5 <- p4 +
+  geom_hline(yintercept = dgamma(theta_0, 2, 3),
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta) +
+  geom_hline(yintercept = dgamma(theta_star, 2, 3),
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star)
+p5
+```
+
+
+---
+# Accept?
+
+```{r}
+runif(1) < min(r, 1)
+```
+
+So we set the new center of the jumping distribution to the previous value:
+
+```{r}
+theta_1 <- theta_0
+```
+
+
+---
+# A second proposal
+
+```{r echo = FALSE}
+set.seed(181)
+```
+
+```{r eval = FALSE}
+theta_star <- rnorm(1, theta_1, .3)
+```
+
+```{r echo = FALSE}
+theta_star <- rnorm(1, theta_1, .3)
+theta_star
+```
+
+
+```{r echo = FALSE}
+p4 <- p3 + 
+  geom_vline(xintercept = theta_star, 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star)
+p4
+```
+
+
+---
+# Calculate the ratio
+
+```{r eval = FALSE}
+r <- dgamma(theta_star, 2, 3)/dgamma(theta_1, 2, 3)
+```
+
+```{r echo = FALSE}
+r <- dgamma(theta_star, 2, 3)/dgamma(theta_1, 2, 3)
+r
+```
+
+
+```{r echo = FALSE}
+p4 +
+  geom_vline(xintercept = theta_0,
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta) +
+  geom_vline(xintercept = theta_star, 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star) +
+  geom_hline(yintercept = dgamma(theta_0, 2, 3),
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta) +
+  geom_hline(yintercept = dgamma(theta_star, 2, 3), 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star)
+```
+
+
+---
+# Accept?
+
+```{r}
+runif(1) < min(r, 1)
+```
+
+So we set the new center of the jumping distribution to the proposed value:
+
+```{r}
+theta_2 <- theta_star 
+```
+
+---
+# A third proposal
+
+```{r echo = FALSE}
+set.seed(181)
+```
+
+```{r eval = FALSE}
+theta_star <- rnorm(1, theta_2, .3)
+```
+
+```{r echo = FALSE}
+theta_star <- rnorm(1, theta_2, .3)
+theta_star
+```
+
+
+```{r echo = FALSE}
+p4 <- p1 + 
+  stat_function(fun = dnorm,
+                args = list(theta_1, .3), 
+                col = "lightgray", 
+                lwd = lwd_proposal,
+                lty = 1,
+                n = 300) +
+    stat_function(fun = dnorm,
+                args = list(theta_2, .3), 
+                col = col_proposal, 
+                lwd = lwd_proposal,
+                lty = lty_proposal,
+                n = 300) +
+  geom_vline(xintercept = theta_2, 
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta) +
+  geom_vline(xintercept = theta_star, 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star)
+p4
+```
+
+
+---
+# Calculate the ratio
+
+```{r eval = FALSE}
+r <- dgamma(theta_star, 2, 3)/dgamma(theta_2, 2, 3)
+```
+
+```{r echo = FALSE}
+r <- dgamma(theta_star, 2, 3)/dgamma(theta_2, 2, 3)
+r
+```
+
+
+```{r echo = FALSE}
+p4 +
+  geom_vline(xintercept = theta_2,
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta) +
+  geom_vline(xintercept = theta_star, 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star) +
+  geom_hline(yintercept = dgamma(theta_2, 2, 3),
+             col = col_theta,
+             lwd = lwd_theta,
+             lty = lty_theta) +
+  geom_hline(yintercept = dgamma(theta_star, 2, 3), 
+             col = col_theta_star,
+             lwd = lwd_theta_star,
+             lty = lty_theta_star)
+```
+
+
+---
+# Accept?
+
+```{r}
+runif(1) < min(r, 1)
+```
+
+
+---
+# Iterated algorithm
+
+```{r}
+theta_0 <- 1.2
+tau <- .3
+it <- 50000
+chain <- rep(NA, it + 1)
+chain[1] <- theta_0
+for (i in 1:it) {
+  proposal <- rnorm(1, chain[i], tau)
+  p_move <- min(dgamma(proposal, 2, 3)/
+                  dgamma(chain[i], 2, 3),
+                1)
+  chain[i + 1] <- ifelse(runif(1) < p_move,
+                         proposal,
+                         chain[i])
+}
+head(chain)
+```
+
+
+---
+# The burn-in period
+
+```{r echo = FALSE, fig.height = 6.5}
+data.frame(chain, index = 1:(it + 1)) %>%
+  slice(1:200) %>%
+  ggplot(aes(x = chain, y = index)) +
+  geom_path(col = "steelblue") +
+  theme_bw() +
+  labs(x = expression(theta))
+```
+
+
+---
+# Thinning
+
+There is strong auto-correlation, so we decimate.
+
+```{r echo = FALSE, fig.height = 4.5, fig.width = 9}
+df1 <- data.frame(x_0 = chain[1:(it-1)],
+                  x_1 = chain[2:it])
+
+chain_thinned <- data.frame(chain) %>%
+  slice(seq(from = 1, to = it, by = 10)) %>%
+  pull()
+
+df2 <- data.frame(x_0 = chain_thinned[1:(length(chain_thinned)-1)],
+                  x_1 = chain_thinned[2:length(chain_thinned)])
+
+p1 <- ggplot(df1, aes(x = x_0, y = x_1)) +
+  geom_point(alpha = .1) +
+  theme_bw()
+
+p2 <- ggplot(df2, aes(x = x_0, y = x_1)) +
+  geom_point(alpha = .1) +
+  theme_bw()
+
+p1 + p2
+```
+
+---
+# Distribution of samples
+
+```{r echo = FALSE}
+burn_in <- 5000
+data.frame(chain_thinned, index = 1:length(chain_thinned)) %>%
+  filter(index > burn_in) %>%
+  ggplot(aes(x = chain)) +
+  stat_function(fun = dgamma, args = list(2, 3), n = 200) +
+  geom_density(col = "steelblue", lwd = 1.1) +
+  theme_bw() +
+  labs(x = expression(theta),
+       y = "") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# Acceptance rate
+
+```{r}
+(acceptance <- 1 - mean(duplicated(chain[-(1:burn_in)])))
+```
+
+- Recommended acceptance rate is 30%-40% - why?
+- How can we adjust the acceptance rate?
+
+
+---
+# High variance jump
+
+```{r echo = FALSE}
+ggplot(data.frame(x = c(0, 4)), aes(x = x)) +
+  stat_function(fun = dgamma, 
+                args = list(2, 3),
+                col = col_target,
+                lwd = lwd_target,
+                lty = lty_target,
+                n = 300) +
+  geom_area(stat = "function",
+            fun = dgamma,
+            args = list(2, 3),
+            fill = col_target,
+            lwd = 1.5,
+            alpha = .5) +
+  stat_function(fun = dnorm,
+                args = list(1.2, 1), 
+                col = col_proposal, 
+                lwd = lwd_proposal,
+                lty = lty_proposal,
+                n = 300) +
+  ylim(c(0, 1.4)) +
+  theme_bw() +
+  labs(x = expression(theta),
+       y = "") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+```
+
+
+---
+# New MC chain
+
+```{r}
+theta_0 <- 1.2
+tau <- 1
+it <- 50000
+chain <- rep(NA, it + 1)
+chain[1] <- theta_0
+for (i in 1:it) {
+  proposal <- rnorm(1, chain[i], tau)
+  p_move <- min(dgamma(proposal, 2, 3)/
+                  dgamma(chain[i], 2, 3),
+                1)
+  chain[i + 1] <- ifelse(runif(1) < p_move,
+                         proposal,
+                         chain[i])
+}
+head(chain)
+```
+
+---
+
+```{r echo = FALSE}
+data.frame(chain, index = 1:(it + 1)) %>%
+  filter(index > burn_in) %>%
+  ggplot(aes(x = chain)) +
+  stat_function(fun = dgamma, args = list(2, 3)) +
+  geom_density(col = "steelblue") +
+  theme_bw() +
+  labs(x = expression(theta))
+```
+
+```{r}
+(acceptance <- 1 - mean(duplicated(chain[-(1:burn_in)])))
+```
+
+
+---
+# Low variance jump
+
+```{r echo = FALSE}
+ggplot(data.frame(x = c(0, 4)), aes(x = x)) +
+  stat_function(fun = dgamma, args = list(2, 3)) +
+  stat_function(fun = dnorm, args = list(1.2, .1), lty = 3) +
+  theme_bw() +
+  labs(x = expression(theta))
+```
+
+
+---
+
+```{r echo = FALSE}
+theta_0 <- 1.2
+tau <- .1
+it <- 10000
+chain <- rep(NA, it + 1)
+chain[1] <- theta_0
+for (i in 1:it) {
+  proposal <- rnorm(1, chain[i], tau)
+  p_move <- min(dgamma(proposal, 2, 3)/dgamma(chain[i], 2, 3), 1)
+  chain[i + 1] <- ifelse(runif(1) < p_move,
+                         proposal,
+                         chain[i])
+}
+```
+
+```{r echo = FALSE}
+data.frame(chain, index = 1:(it + 1)) %>%
+  ggplot(aes(x = chain)) +
+  stat_function(fun = dgamma, args = list(2, 3)) +
+  geom_density(col = "steelblue") +
+  theme_bw() +
+  labs(x = expression(theta))
+```
+
+```{r}
+(acceptance <- 1 - mean(duplicated(chain[-(1:burn_in)])))
+```
+
+---
+# Bayesian Regression
+
+Begin by generating data.
+
+```{r}
+set.seed(79)
+B0 <- 0
+B1 <- 5
+sigma <- 10
+n <- 31
+x <- (-(n-1)/2):((n-1)/2)
+y <-  B0 + B1 * x + rnorm(n, mean = 0, sd = sigma)
+```
+
+---
+
+```{r echo = FALSE}
+df <- data.frame(x, y)
+ggplot(df, aes(x = x, y = y)) +
+  geom_point() + 
+  theme_bw()
+```
+
+
+---
+# The Likelihood
+
+```{r}
+likelihood <- function(theta) {
+    B0 <- theta[1]
+    B1 <- theta[2]
+    sigma <- theta[3]
+    y_fit <- B0 + B1 * x
+    logLik_vec <- dnorm(y, 
+                        mean = y_fit, 
+                        sd = sigma, 
+                        log = T)
+    sum(logLik_vec)
+}
+```
+
+
+---
+# The Prior
+
+```{r}
+prior <- function(theta) {
+    B0 <- theta[1]
+    B1 <- theta[2]
+    sigma <- theta[3]
+    B0_prior <- dnorm(B0, sd = 5, log = T)
+    B1_prior <- dunif(B1, min = 0, max = 10, log = T)
+    sigma_prior <- dunif(sigma, min = 0, max = 30, log = T)
+    B0_prior + B1_prior + sigma_prior
+}
+```
+
+
+---
+# The Posterior
+
+```{r}
+posterior <- function(theta) {
+   likelihood(theta) + prior(theta)
+}
+```
+
+Why are we using logs of everything? Why don't we care about the constant of proportionality?
+
+---
+
+
+---
+# Metropolis Algorithm
+
+```{r}
+it <- 50000
+chain <- matrix(rep(NA, (it + 1) * 3), ncol = 3)
+theta_0 <- c(0, 4, 10)
+chain[1, ] <- theta_0
+for (i in 1:it){
+  proposal <- rnorm(3, mean = chain[i, ], 
+                    sd = c(0.5,0.1,0.3))
+  p_move <- exp(posterior(proposal) - posterior(chain[i, ]))
+  if (runif(1) < p_move) {
+    chain[i + 1, ] <- proposal
+  } else {
+    chain[i + 1, ] <- chain[i, ]
+  }
+}
+head(chain)
+```
+ 
+
+---
+# Trace chain 
+ 
+```{r echo = FALSE, message = FALSE, fig.height=4, fig.width = 10}
+burn_in <- 5000
+acceptance <- 1 - mean(duplicated(chain[-(1:burn_in),]))
+colnames(chain) <- c("B0", "B1", "sigma")
+chain <- data.frame(chain, index = 1:(it + 1))
+
+trace_chain <- function(chain, n, n_new = 500) {
+  chain %>%
+  slice(1:n) %>%
+  mutate(generation = index > (n - n_new)) %>%
+  ggplot(aes(x = B0, y = B1)) +
+  geom_path(aes(col = generation)) +
+  scale_colour_manual(values = c("gray", "steelblue")) +
+  guides(col = FALSE) +
+  theme_bw() +
+  xlim(range(chain$B0[1:1500])) +
+  ylim(range(chain$B1[1:1500]))
+}
+
+p1 <- chain %>%
+  slice(1:500) %>%
+  ggplot(aes(x = B0, y = B1)) +
+  geom_path(col = "steelblue") +
+  theme_bw() +
+  xlim(range(chain$B0[1:1500])) +
+  ylim(range(chain$B1[1:1500]))
+p2 <- trace_chain(chain, n = 1000, n_new = 500)
+p3 <- trace_chain(chain, n = 1500, n_new = 500)
+library(gridExtra)
+grid.arrange(p1, p2, p3, nrow = 1)
+```
+
+
+---
+# Sigma vs Betas
+
+```{r echo = FALSE, fig.height = 7, fig.width = 10}
+chain %>%
+  slice(burn_in:(it + 1)) %>%
+  mutate(sig_bins = cut(sigma, breaks = 6)) %>%
+  ggplot(aes(x = B0, y = B1)) +
+  geom_point(alpha = .5) +
+  facet_wrap(~sig_bins) +
+  theme_bw()
+```
+
+
+---
+# From Prior to Posterior
+
+```{r echo = FALSE, fig.height = 7, fig.width = 10}
+B0_prior <- ggplot(data.frame(x = c(-15, 15)), aes(x = x)) +
+  stat_function(fun = dnorm, args = list(sd = 5)) +
+  labs(y = "") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+B1_prior <- ggplot(data.frame(x = c(-.001, 10.001)), aes(x = x)) +
+  stat_function(fun = dunif, args = list(min = 0, max = 10)) +
+  labs(y = "") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+sigma_prior <- ggplot(data.frame(x = c(-.001, 30.001)), aes(x = x)) +
+  stat_function(fun = dunif, args = list(min = 0, max = 30)) +
+  labs(y = "") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank())
+B0_posterior <- ggplot(chain, aes(x = B0)) +
+  geom_histogram() +
+  labs(y = "") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  geom_vline(xintercept = B0, col = "goldenrod")
+B1_posterior <- ggplot(chain, aes(x = B1)) +
+  geom_histogram() +
+  labs(y = "") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  geom_vline(xintercept = B1, col = "goldenrod")
+sigma_posterior <- ggplot(chain, aes(x = sigma)) +
+  geom_histogram() +
+  labs(y = "") +
+  theme_bw() +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()) +
+  geom_vline(xintercept = sigma, col = "goldenrod")
+grid.arrange(B0_prior, B1_prior, sigma_prior,
+             B0_posterior, B1_posterior, sigma_posterior,
+             ncol = 3)
+```
+
+---
+# Bayesian Point Estimates
+
+There are several options for turning the posterior distribution of the parameters into point estimates of the coefficients. We'll use the mean.
+
+```{r}
+(B0_bayes <- mean(chain$B0))
+(B1_bayes <- mean(chain$B1))
+(sigma_bayes <- mean(chain$sigma))
+```
+
+---
+
+We can compare those to the maximum likelihood / least squares estimates.
+
+```{r}
+df <- data.frame(x, y)
+m1 <- lm(y ~ x, df)
+coef(m1)
+```
+
+---
+# Two approaches
+
+```{r echo = FALSE}
+ggplot(df, aes(x, y)) +
+  geom_point() +
+  geom_abline(intercept = coef(m1)[1], 
+              slope = coef(m1)[2],
+              col = "orange",
+              lty = 1,
+              lwd = 1.1) +
+  geom_abline(intercept = B0_bayes, 
+              slope = B1_bayes, 
+              col = "blue",
+              lty = 2,
+              lwd = 1.1)+
+  theme_bw()
+```
+
+---
+# Intervals on $\beta_1$
+
+### Confidence Interval
+
+```{r}
+confint(m1, parm = 2)
+```
+
+### Credible Interval
+
+```{r}
+quantile(chain$B1, c(.025, .975))
+```
+
+
