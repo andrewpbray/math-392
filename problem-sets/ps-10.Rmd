@@ -1,0 +1,48 @@
+---
+title: "MATH 392 Problem Set 10"
+output: 
+  pdf_document
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", 
+                      message = FALSE, warning = FALSE)
+library(tidyverse)
+library(knitr)
+set.seed(1999) # set seed for reproducibility
+```
+
+
+### Part I: Changing the changepoint
+
+You're encouraged to start these exercise by copying into your problem set code from [the notes](https://github.com/andrewpbray/math-392/blob/master/slides/week-12-gibbs-changepoint-notes.Rmd) that implements the Gibbs Sampler with `set.seed(497)`.
+
+1. Using the `post_samples` matrix (or corresponding dataframe `df`), investigate the shape of the joint posterior distribution by constructing several plots. After contructing these plots, summarize in a few sentences the relationship between the three parameters in the posterior. *Please put all three plots in a single 1 by 3 frame using `library(patchwork)`.*
+    - A scatterplot of $\lambda$ on $\mu$ with color mapped to the value of $m$.
+    - The same scatterplot but where you only include samples with values of $m$ that are less than 10 or greater than 50.
+    - A [hexplot](http://ggplot2.tidyverse.org/reference/stat_summary_2d.html) where each hex is filled with either the mean or median value of $m$.
+2. Alter one of the prior distributions of the Poisson rate parameters so that they are much more flat. What is the effect on the joint posterior distribution?
+
+### Part II: The Metropolis algorithm
+
+To validate the results from the Gibbs sampler, get a second estimate of the joint posterior (using the original priors) using the Metropolis algorithm. You're encouraged to start these exercise by copying into your problem set code from [the notes](https://github.com/andrewpbray/math-392/blob/master/slides/week-12-bayesian-regression-metropolis-slides.Rmd) that implements the Metropolis Algorithm. You will need to put some thought into how to build your symmetric proposal distribution since it combines continuous and discrete parameters.
+
+1. Generate the same 3 x 1 plot as you did for the Gibbs sampler. Do these tell the same story? (these plots should represent your final conclusions after considering questions 2 and 3 below).
+2. What is your acceptance rate? Tinker with the variance of the proposal distribution to bring it within the target range.
+3. To understand the Markov dependence in this chain (or in fact any form of dependence in index), a helpful tool is an [autocorrelation plot](https://en.wikipedia.org/wiki/Autocorrelation). Use the `autoplot()` function in `library(ggfortify)` to get a sense of the correlation in your chain ([see example](https://rh8liuqy.github.io/ACF_PACF_by_ggplot2.html) of a correlogram). How heavily do you need to thin the chain to diminish most of this dependence? Go ahead and do so to produce a final set of plots for question 1 above.
+
+
+<!-- ### Part II: Rejection Sampling -->
+
+<!-- Gibbs Sampling isn't the only way to draw samples from a joint posterior. One that's always available to use is rejection sampling. You may want to refer to your notes and past slides for more details, but in broad strokes rejection sampling for the changepoint problem will involve, -->
+
+<!-- - Writing a function called `joint_post()` that takes as input values of the three parameters (and the data) and returns a value of the joint posterior density. -->
+<!-- - Formulating a 3D proposal distribution that you can take random samples from that covers the support of the parameters (or the support with the highest density). -->
+<!-- - Taking draws from the proposal distribution for your three parameters and retaining it with probability equal to the ratio of the proposal density at the point to the value of `joint_post()` at that point. Note that you will likely need to normalize either the proposal density or the joint density so that the proposal density is always greater than or equal to the joint density, ensuring acceptance probabilities less than or equal to 1. -->
+<!-- - Repeat the previous step many many times until you have accepted a suitable number of draws from the joint posterior. -->
+
+<!-- Implement such a rejection sampling scheme for the changepoint problem and create the same plots from part II with the original priors and the data from `set.seed(497)`. Is the structure in the new sample from the joint posterior the same as when we used a Gibbs Sampler (up to Monte Carlo variability)? What are the downsides, as you see it, to the rejection sampling approach? What about the upsides? -->
+
+<!-- Note: this problem set has some serious computation in it, so I suggest cacheing your results by adding `cache = TRUE` to the r chunk options. -->
+
+
