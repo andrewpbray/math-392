@@ -1,0 +1,220 @@
+---
+title: "Rejection Sampling"
+subtitle: "Lessons from Buffon's Needle"
+author: "Math 392"
+header-includes:
+   - \usepackage{amsmath}
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+```{r include = FALSE}
+knitr::opts_chunk$set(message = FALSE,
+                      warning = FALSE,
+                      fig.align = "center",
+                      fig.height = 5.4)
+library(tidyverse)
+library(patchwork)
+
+# set plot aesthetics
+library(wesanderson)
+pal <- wes_palette("Royal1")
+col_target <- "darkgray"
+lwd_target <- 1.5
+lty_target <- 1
+col_proposal <- "darkgray"
+lwd_proposal <- 1.1
+lty_proposal <- 2
+col_theta <- "steelblue"
+lwd_theta <- 1.1
+lty_theta <- 3
+col_theta_star <- "orchid"
+lwd_theta_star <- 1.1
+lty_theta_star <- 3
+```
+
+# Buffon's Needle (1733)
+
+Dorp a needle of unit length on to a wood floor of infinite expanse with plane of unit length. What is the probability the needle crosses a line between planks?
+
+<!-- Draw diagram of planks and needles. -->
+
+---
+# Parameterization
+
+$D$: random distance from the needle midpoint to the line, $0 < D < \frac{1}{2}$
+
+$\theta$: random angle between the needle and the line, $0 < \theta < \pi$.
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<!-- Draw diagram with parameters added -->
+
+
+*Observe*: the needle will cross when $D' > D$
+
+$$\sin(\theta) = \frac{D'}{1/2}; \quad D' = \frac{\sin({\theta})}{2}$$
+
+that is, when $\frac{\sin(\theta)}{2} > D$.
+
+
+---
+# Geometric probability
+
+$$P(\textrm{needle crosses line}) = P\left(\frac{\sin(\theta)}{2} > D\right)$$
+<!-- Draw sample space of D and theta with sin function -->
+
+---
+# Monte Carlo approximation
+
+```{r}
+theta <- runif(1e6, 0, pi)
+D <- runif(1e6, 0, 1/2)
+mean(sin(theta)/2 > D)
+2/pi
+```
+
+
+---
+# Generating from $f(\theta)$
+
+Our original sample of $\theta$.
+
+```{r echo = TRUE, fig.height = 3.7}
+data.frame(theta) %>%
+  ggplot(aes(x = theta)) +
+  geom_density() +
+  theme_bw()
+```
+
+---
+# Generating from $f(\theta)$, cont.
+
+The $\theta$ that meet our condition.
+
+```{r echo = TRUE, fig.height = 3.7}
+data.frame(theta) %>%
+  filter(sin(theta)/2 > D) %>%
+  ggplot(aes(x = theta)) +
+  geom_density() +
+  theme_bw()
+```
+
+---
+# Monte Carlo approximation rephrased
+
+1. Generate $\theta_i \sim Unif(0, \pi)$
+2. Generate $D \sim Unif(0, 1/2)$
+3. Retain $\theta_i$ if $D < f(\theta_i)$
+
+Or:
+
+1. Generate $\theta_i \sim Unif(0, \pi)$
+2. Retain $\theta_i$ with probability $\frac{f(\theta_i)}{1/2}$
+
+
+---
+# Rejection sampling
+
+<!-- Draw multimodal f, a non uniform q, and envelope M * q -->
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+Let $f(\theta)$ be the density we wish to sample from and $q(\theta)$ another density that we are able to sample from. Select an $M > 0$ such that $M q(\theta) \ge f(\theta)$ for all values of $\theta$.
+
+1. Generate $\theta_i \sim q(\theta)$
+2. Generate $U_i \sim Unif(0, 1)$
+3. Retain $\theta_i$ if $U_i < \frac{f(\theta_i)}{M q(\theta_i)}$
+
+
+---
+# Practice: Sampling from the Gamma
+
+In groups, use rejection sampling to approximate $\textrm{Gamma}(2, 3)$. Plot your approximation against the true density.
+
+```{r echo = FALSE}
+p1 <- ggplot(data.frame(x = c(0, 4)), aes(x = x)) +
+  stat_function(fun = dgamma, 
+                args = list(2, 3),
+                col = col_target,
+                lwd = lwd_target,
+                lty = lty_target,
+                n = 300) +
+  geom_area(stat = "function",
+            fun = dgamma,
+            args = list(2, 3),
+            fill = col_target,
+            lwd = 1.5,
+            alpha = .5) +
+  ylim(c(0, 1.4)) +
+  theme_bw() +
+  labs(x = expression(theta),
+       y = "") +
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank())
+p1
+```
+
+
+```{r eval = FALSE, echo = FALSE}
+# Uniform q
+theta_proposed <- runif(1e6, 0, 5)
+f <- dgamma(theta_proposed, 2, 3)
+q <- dunif(theta_proposed, 0, 5)
+M <- max(f/q)
+U <- runif(1e6)
+
+theta_accepted <- theta_proposed[U < f / (M * q)]
+
+length(theta_accepted)/1e6
+
+Mdunif <- function(x, min, max) {
+  M * dunif(x, min, max)
+}
+
+ggplot(data.frame(theta_accepted), aes(x = theta_accepted)) +
+  geom_density() +
+  stat_function(fun = Mdunif, args = list(0, 5)) +
+  theme_bw()
+
+
+# Exponential q
+theta_proposed <- rexp(1e6, 1)
+q <- dexp(theta_proposed, .1)
+M <- max(f/q)
+U <- runif(1e6)
+
+theta_accepted <- theta_proposed[U < f / (M * q)]
+
+length(theta_accepted)/1e6
+
+Mdexp <- function(x, rate) {
+  M * dexp(x, rate)
+}
+
+ggplot(data.frame(theta_accepted), aes(x = theta_accepted)) +
+  geom_density() +
+  stat_function(fun = Mdexp, args = list(.1)) +
+  theme_bw()
+```
+

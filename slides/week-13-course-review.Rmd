@@ -1,0 +1,59 @@
+---
+title: "Course Review" 
+author: "Math 392"
+header-includes:
+   - \usepackage{amsmath}
+output:
+  xaringan::moon_reader:
+    css: ["fc", "fc-fonts", "reed.css", "default"]
+    lib_dir: libs
+    nature:
+      highlightStyle: atelier-forest-light
+      highlightLines: true
+      highlightSpans: true
+      countIncrementalSlides: false
+---
+
+# The Competitors
+
+.pull-left[
+## Team Eta
+Bijay  
+Ryan  
+Jonathan  
+Simon  
+Grayson  
+Naomi  
+]
+
+.pull-right[
+## Team Lambda
+Sam  
+Shisham  
+Yilin  
+Tim  
+Ellen  
+Nolan  
+Ali
+]
+
+---
+# Round One: Use your words
+
+## Team Lambda will start
+- Bijay will have 1 min to try to have his team guess as many of his key words as possible by giving verbal clues but not using any part of the key word or a variant of it.
+- I will be sending the words to Bijay via Slack.
+- Team Eta will be observing.
+
+## Team Eta takes their turn
+- After the minute is over, Sam will do what Bijay did: try to get get his team to guess as many of his key words as possible.
+
+- Teams will alternate until the words are exhausted.
+- I will keep score
+
+
+---
+# Round Two: Use your pictures
+
+- Same format except you will be drawing the term on the whiteboard.
+- No words, letters (including in Greek), or numbers permitted *except on axis labels*.
