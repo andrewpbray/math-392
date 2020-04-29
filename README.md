@@ -5,6 +5,23 @@ Math 392 | Reed College | Spring 2020
 
 ### Schedule
 
+#### Week 13: MCMC, cont.
+
+**Monday**
+- [Join class](https://zoom.us/j/232169858)
+- Rejection Sampling and Buffon's Needle
+
+**Wednesday**
+- [Join class](https://zoom.us/j/232169858)
+- Course in Review
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+**Friday**
+- [Join class](https://zoom.us/j/232169858)
+- Guest Lecture: Hidden Markov Models with Gibbs Sampling
+- [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
+
+
 #### Week 12: Bayesian Modeling
 
 **Monday**
