@@ -5,7 +5,7 @@ Math 392 | Reed College | Spring 2020
 
 ### Schedule
 
-#### Week 13: MCMC, cont.
+#### Week 13: Markoc Chain Monte Carlo, cont.
 
 **Monday**
 - [Join class](https://zoom.us/j/232169858)
@@ -37,6 +37,7 @@ Math 392 | Reed College | Spring 2020
 
 **Friday**
 - [Join class](https://zoom.us/j/232169858)
+- Metropolis Algorithm
 - [Office hours 3 - 5 pm PST](https://zoom.us/j/759760558)
 
 
